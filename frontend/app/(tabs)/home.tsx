@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  Dimensions, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
+  Dimensions, FlatList, Image as RNImage, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -48,9 +48,16 @@ export default function Home() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
       {/* Sticky header */}
       <View style={s.header}>
-        <View>
-          <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
-          <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <RNImage
+            source={require("../../assets/images/gk-logo.png")}
+            style={{ width: 36, height: 36 }}
+            resizeMode="contain"
+          />
+          <View>
+            <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
+            <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
+          </View>
         </View>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <Pressable testID="header-notifications" onPress={() => router.push("/notifications")} style={s.headerBtn}>

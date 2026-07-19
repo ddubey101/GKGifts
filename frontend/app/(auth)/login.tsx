@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView, Platform, Pressable, ScrollView,
   StyleSheet, Text, TextInput, View,
 } from "react-native";
@@ -37,7 +38,11 @@ export default function Login() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView contentContainerStyle={{ padding: spacing.xl, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View style={{ alignItems: "center", marginBottom: spacing.xl }}>
-            <View style={s.logo}><Ionicons name="bag-handle" size={28} color={colors.onBrand} /></View>
+            <Image
+              source={require("../../assets/images/gk-logo.png")}
+              style={s.logo}
+              resizeMode="contain"
+            />
             <Text style={[typography.h1, { marginTop: spacing.md }]}>Welcome to Gk Gifts</Text>
             <Text style={{ color: colors.onSurfaceMuted, marginTop: 4 }}>Sign in to continue shopping</Text>
           </View>
@@ -88,7 +93,7 @@ export default function Login() {
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
-  logo: { width: 56, height: 56, borderRadius: 16, backgroundColor: colors.brandPrimary, alignItems: "center", justifyContent: "center" },
+  logo: { width: 96, height: 96 },
   label: { fontSize: 12, color: colors.onSurfaceMuted, marginTop: spacing.md, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
   input: { backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: 15, color: colors.onSurface },
   err: { color: colors.error, marginTop: spacing.md },
