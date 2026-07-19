@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.routing import APIRouter
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import UpdateOne
 from pydantic import BaseModel, EmailStr, Field
 from starlette.middleware.cors import CORSMiddleware
 
@@ -388,10 +389,16 @@ async def _get_cart(uid: str) -> dict:
 
 
 async def _hydrate_cart(cart: dict) -> dict:
+    raw_items = cart.get("items", [])
+    if not raw_items:
+        return {"items": [], "subtotal": 0.0, "shipping": 0, "tax": 0.0, "total": 0.0, "count": 0}
+    ids = [it["product_id"] for it in raw_items]
+    products = await db.products.find({"product_id": {"$in": ids}}, {"_id": 0}).to_list(len(ids))
+    pmap = {p["product_id"]: p for p in products}
     items = []
     subtotal = 0.0
-    for it in cart.get("items", []):
-        p = await db.products.find_one({"product_id": it["product_id"]}, {"_id": 0})
+    for it in raw_items:
+        p = pmap.get(it["product_id"])
         if not p:
             continue
         qty = it["quantity"]
@@ -582,12 +589,13 @@ async def checkout(body: CheckoutIn, user: dict = Depends(current_user)):
         "created_at": now_utc(),
     }
     await db.orders.insert_one(order)
-    # decrement stock
-    for i in cart["items"]:
-        await db.products.update_one(
-            {"product_id": i["product_id"]},
-            {"$inc": {"stock": -i["quantity"]}},
-        )
+    # decrement stock (batched)
+    bulk_ops = [
+        UpdateOne({"product_id": i["product_id"]}, {"$inc": {"stock": -i["quantity"]}})
+        for i in cart["items"]
+    ]
+    if bulk_ops:
+        await db.products.bulk_write(bulk_ops)
     # in-app notification
     await db.notifications.insert_one(
         {
@@ -673,7 +681,10 @@ async def notifs_read_all(user: dict = Depends(current_user)):
 
 @api.get("/admin/stats")
 async def admin_stats(_: dict = Depends(require_admin)):
-    orders = await db.orders.find({}, {"_id": 0}).to_list(2000)
+    orders = await db.orders.find(
+        {},
+        {"_id": 0, "order_id": 1, "total": 1, "status": 1, "created_at": 1, "items": 1, "user_id": 1},
+    ).to_list(2000)
     revenue = sum(o["total"] for o in orders)
     users = await db.users.count_documents({})
     products = await db.products.count_documents({})

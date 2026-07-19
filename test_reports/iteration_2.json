@@ -1,0 +1,41 @@
+{
+  "summary": "Backend-only regression pass after N+1 optimizations in server.py. Created /app/backend/tests/test_n1_regression.py with 5 focused tests targeting the review request: (1) empty-cart hydration shape, (2) cart/add + cart/update hydrated shape/totals + item.product populated by batch $in fetch, (3) checkout creates order + clears cart + decrements stock (bulk_write) + pushes in-app notification, (4) admin/stats projection retains all 7 required keys and items[] on recent_orders, (5) multi-item (3 different products with qty 1/2/3) end-to-end checkout with per-product stock verification. All 5 new tests PASS. Also updated legacy /app/backend/tests/backend_test.py credentials from @aura.com -> @gkgifts.com and re-ran the full 21-test regression suite: 21/21 PASS. Grand total: 26/26 backend tests green. No regressions detected in the refactor. Batch $in fetch preserves item order & full product fields (name/price/images/stock). Bulk stock decrement is atomic per product (verified by before/after GET /api/products/{id} for 3 line items). admin/stats projection still exposes revenue, orders, users, products, low_stock, top_products, recent_orders with items[] intact.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/checkout", "issue": "Stock is decremented via unconditional $inc: -qty in the bulk_write; there is still no pre-flight stock >= quantity guard, so stock can go negative under concurrent load. Same behaviour as iteration_1 – flagged again for completeness."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_n1_regression.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_n1_regression.xml",
+    "/app/test_reports/pytest/pytest_full_regression.xml"
+  ],
+  "action_items": [
+    "(Carry-over) Add pre-flight stock validation in /api/checkout before bulk_write $inc to prevent negative stock on concurrent checkouts."
+  ],
+  "critical_code_review_comments": [
+    "_hydrate_cart: batch fetch via {'product_id': {'$in': ids}} + pmap lookup is correct and preserves user cart order because iteration is over raw_items, not products. Good.",
+    "checkout: pymongo UpdateOne bulk_write is used correctly for stock decrements; imported UpdateOne is required (verified server still boots and tests pass).",
+    "admin/stats: projection on orders now returns {order_id, total, status, created_at, items, user_id}; sum(o['total']) and recent_orders[items] both still work. All 7 top-level keys present.",
+    "Note: recent_orders is derived by sorting the already-fetched orders list; no extra round-trip. Efficient."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_n1_regression.py (new – 5 focused regression tests)",
+    "/app/backend/tests/backend_test.py (creds updated demo@aura.com -> demo@gkgifts.com, admin@aura.com -> admin@gkgifts.com)",
+    "/app/test_reports/iteration_2.json (this report)"
+  ],
+  "success_rate": {"backend": "100% (26/26)", "frontend": "not tested (skipped per review request)"},
+  "seed_data_creation": "No new persistent seed. Tests create a TEST_-prefixed address that is teared down. Multiple orders created against demo user; stock is decremented on the seeded catalog (expected, matches production behaviour).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "N+1 refactor is verified. New regression file /app/backend/tests/test_n1_regression.py covers cart hydration shape, batch product embed, bulk stock decrement, admin/stats projection integrity, and multi-item end-to-end. Credentials are now @gkgifts.com in both test files. If admin/stats or cart shape ever changes again, run: EXPO_PUBLIC_BACKEND_URL=<url> pytest /app/backend/tests/test_n1_regression.py -v.",
+  "rca_of_issue": "N/A – no bugs surfaced by this regression pass. The three refactors (batch $in fetch in _hydrate_cart, pymongo bulk_write for stock decrements in /checkout, projection on /admin/stats) are functionally equivalent to the previous per-item implementations and preserve response shapes."
+}

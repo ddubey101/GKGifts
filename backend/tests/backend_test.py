@@ -10,9 +10,9 @@ import requests
 BASE_URL = os.environ.get("EXPO_PUBLIC_BACKEND_URL", "https://scalable-marketplace-4.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 
-DEMO_EMAIL = "demo@aura.com"
+DEMO_EMAIL = "demo@gkgifts.com"
 DEMO_PASS = "Demo@123"
-ADMIN_EMAIL = "admin@aura.com"
+ADMIN_EMAIL = "admin@gkgifts.com"
 ADMIN_PASS = "Admin@123"
 
 
