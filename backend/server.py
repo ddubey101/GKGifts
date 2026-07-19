@@ -684,7 +684,7 @@ async def admin_stats(_: dict = Depends(require_admin)):
     orders = await db.orders.find(
         {},
         {"_id": 0, "order_id": 1, "total": 1, "status": 1, "created_at": 1, "items": 1, "user_id": 1},
-    ).to_list(2000)
+    ).sort("created_at", -1).limit(500).to_list(500)
     revenue = sum(o["total"] for o in orders)
     users = await db.users.count_documents({})
     products = await db.products.count_documents({})
