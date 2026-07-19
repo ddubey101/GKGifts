@@ -1,4 +1,4 @@
-// Thin API client for Aura Commerce.
+// Thin API client for Gk Gifts.
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 

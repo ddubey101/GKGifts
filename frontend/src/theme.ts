@@ -1,4 +1,4 @@
-// Aura Commerce theme tokens.
+// Gk Gifts theme tokens.
 export const colors = {
   surface: "#F9F9F8",
   surfaceSecondary: "#FFFFFF",

@@ -1,4 +1,4 @@
-"""Aura Commerce backend - FastAPI + MongoDB.
+"""Gk Gifts backend - FastAPI + MongoDB.
 
 Handles auth (email/password JWT + Emergent Google session), catalog,
 cart, orders, wishlist, addresses, reviews, coupons, banners, admin.
@@ -866,11 +866,13 @@ async def startup():
     if await db.products.count_documents({}) == 0:
         for p in DEMO_PRODUCTS:
             await db.products.insert_one({"product_id": new_id("prd"), **p, "created_at": now_utc()})
-    # seed admin + demo customer
-    if not await db.users.find_one({"email": "admin@aura.com"}):
+    # remove legacy seed users from previous brand (aura) so credentials stay clean
+    await db.users.delete_many({"email": {"$in": ["admin@aura.com", "demo@aura.com"]}})
+    # seed admin + demo customer under new brand
+    if not await db.users.find_one({"email": "admin@gkgifts.com"}):
         await db.users.insert_one({
             "user_id": new_id("user"),
-            "email": "admin@aura.com",
+            "email": "admin@gkgifts.com",
             "name": "Admin",
             "password_hash": hash_pw("Admin@123"),
             "role": "admin",
@@ -878,10 +880,10 @@ async def startup():
             "picture": "",
             "created_at": now_utc(),
         })
-    if not await db.users.find_one({"email": "demo@aura.com"}):
+    if not await db.users.find_one({"email": "demo@gkgifts.com"}):
         await db.users.insert_one({
             "user_id": new_id("user"),
-            "email": "demo@aura.com",
+            "email": "demo@gkgifts.com",
             "name": "Demo Shopper",
             "password_hash": hash_pw("Demo@123"),
             "role": "customer",
@@ -889,7 +891,7 @@ async def startup():
             "picture": "",
             "created_at": now_utc(),
         })
-    logger.info("Aura Commerce seed complete.")
+    logger.info("Gk Gifts seed complete.")
 
 
 @app.on_event("shutdown")

@@ -38,7 +38,7 @@ export default function Login() {
         <ScrollView contentContainerStyle={{ padding: spacing.xl, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View style={{ alignItems: "center", marginBottom: spacing.xl }}>
             <View style={s.logo}><Ionicons name="bag-handle" size={28} color={colors.onBrand} /></View>
-            <Text style={[typography.h1, { marginTop: spacing.md }]}>Welcome to Aura</Text>
+            <Text style={[typography.h1, { marginTop: spacing.md }]}>Welcome to Gk Gifts</Text>
             <Text style={{ color: colors.onSurfaceMuted, marginTop: 4 }}>Sign in to continue shopping</Text>
           </View>
 
@@ -77,8 +77,8 @@ export default function Login() {
 
           <View style={s.hint}>
             <Text style={s.hintTitle}>Demo credentials</Text>
-            <Text style={s.hintText}>Customer: demo@aura.com / Demo@123</Text>
-            <Text style={s.hintText}>Admin: admin@aura.com / Admin@123</Text>
+            <Text style={s.hintText}>Customer: demo@gkgifts.com / Demo@123</Text>
+            <Text style={s.hintText}>Admin: admin@gkgifts.com / Admin@123</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

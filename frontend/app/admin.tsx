@@ -30,7 +30,7 @@ export default function Admin() {
   useEffect(() => { load(); }, [load]);
 
   if (user?.role !== "admin") {
-    return <SafeAreaView style={{ flex: 1 }}><EmptyState title="Admin only" subtitle="Sign in with admin@aura.com" /></SafeAreaView>;
+    return <SafeAreaView style={{ flex: 1 }}><EmptyState title="Admin only" subtitle="Sign in with admin@gkgifts.com" /></SafeAreaView>;
   }
 
   const advance = async (orderId: string, currentStatus: string) => {
