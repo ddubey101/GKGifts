@@ -1,0 +1,223 @@
+{
+  "app_name": "Aura Commerce",
+  "personality": "1 iOS-Native Clean",
+  "personality_one_liner": "Product is the hero, framed by refined, warm-minimalist iOS-native structure and terracotta accents.",
+  "color": {
+    "light": {
+      "surface": "#F9F9F8",
+      "onSurface": "#1A1A1A",
+      "surfaceSecondary": "#FFFFFF",
+      "onSurfaceSecondary": "#1A1A1A",
+      "surfaceTertiary": "#F2F2F0",
+      "onSurfaceTertiary": "#4A4A4A",
+      "surfaceInverse": "#222222",
+      "onSurfaceInverse": "#FFFFFF",
+      "brand": "#D35400",
+      "brandPrimary": "#E65C00",
+      "onBrandPrimary": "#FFFFFF",
+      "brandSecondary": "#FFE8DB",
+      "onBrandSecondary": "#A34100",
+      "brandTertiary": "#FFF2EB",
+      "onBrandTertiary": "#CC5200",
+      "success": "#2D7A4A",
+      "onSuccess": "#FFFFFF",
+      "warning": "#B8860B",
+      "onWarning": "#FFFFFF",
+      "error": "#CC3333",
+      "onError": "#FFFFFF",
+      "info": "#4A4A4A",
+      "onInfo": "#FFFFFF",
+      "border": "#E8E8E6",
+      "borderStrong": "#CCCCCC",
+      "divider": "#E8E8E6"
+    },
+    "dark": {
+      "surface": "#121212",
+      "onSurface": "#F5F5F5",
+      "surfaceSecondary": "#1E1E1C",
+      "onSurfaceSecondary": "#F5F5F5",
+      "surfaceTertiary": "#2C2C2A",
+      "onSurfaceTertiary": "#E0E0E0",
+      "surfaceInverse": "#F5F5F5",
+      "onSurfaceInverse": "#121212",
+      "brand": "#D35400",
+      "brandPrimary": "#FF7A29",
+      "onBrandPrimary": "#1A1A1A",
+      "brandSecondary": "#4D1F00",
+      "onBrandSecondary": "#FFD1B3",
+      "brandTertiary": "#331400",
+      "onBrandTertiary": "#FFB885",
+      "success": "#4CAF50",
+      "onSuccess": "#1A1A1A",
+      "warning": "#FFC107",
+      "onWarning": "#1A1A1A",
+      "error": "#FF5252",
+      "onError": "#1A1A1A",
+      "info": "#9E9E9E",
+      "onInfo": "#1A1A1A",
+      "border": "#333333",
+      "borderStrong": "#555555",
+      "divider": "#2A2A2A"
+    }
+  },
+  "typography": {
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous padding around content, intentional whitespace, iOS-native rhythms. Thumb zone CTAs.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "bottom_tabs + stack",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": true,
+    "do's": [
+      "Bottom tab bar with blur over content",
+      "Sticky 'Add to Cart' footer",
+      "Sticky headers on scrolling product lists",
+      "Featured category cards with glass overlay on brand-tinted background"
+    ],
+    "dont's": [
+      "Do not blur standard product cards in the grid",
+      "Do not blur form fields or body text regions"
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-blur",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "haptics": {
+    "add_to_cart": "success",
+    "variant_select": "light",
+    "quantity_change": "light",
+    "checkout_submit": "heavy",
+    "wishlist_toggle": "medium"
+  },
+  "screens": [
+    {
+      "name": "Home",
+      "purpose": "Discover deals, browse categories, and view personalized recommendations.",
+      "states": {
+        "loading": "Skeleton UI for banner, horizontal list, and 2-col grid.",
+        "empty": "N/A for home.",
+        "error": "Failed to load feed. Retry button centered."
+      },
+      "layout": "Search bar at top. Horizontal scroll for promotional banners (full-bleed with gradient scrim). Horizontal scroll for circular category items. Flash Sale section with countdown timer. 2-col product grid using 'space-between' with width: (screenWidth - 2*padding - gap) / 2. Bottom tabs sticky with glass effect."
+    },
+    {
+      "name": "Search & Category",
+      "purpose": "Find specific products via nested categories and applied filters.",
+      "states": {
+        "loading": "Skeleton 2-col grid.",
+        "empty": "Illustration of an empty box with 'No results found' and a 'Clear Filters' button.",
+        "error": "Failed to load products. Retry button."
+      },
+      "layout": "Sticky glass header with search input and filter/sort pill buttons. Scrollable 2-col product grid below."
+    },
+    {
+      "name": "Product Detail (PDP)",
+      "purpose": "Convince user to purchase by showcasing high-quality images and clear pricing.",
+      "states": {
+        "loading": "Skeleton image hero and text blocks.",
+        "empty": "N/A",
+        "error": "Failed to load product details. Retry button."
+      },
+      "layout": "Large hero image gallery (swipeable, takes 80% screen width natively, min 400px height). Immediately below: Price (prominent), Product Name. Social proof (rating stars). Expandable accordion or tabbed description. Use @gorhom/bottom-sheet for size/color variants to avoid page leaps. Sticky footer anchored at bottom with 'Add to Cart' CTA."
+    },
+    {
+      "name": "Cart",
+      "purpose": "Review intended purchases, apply coupons, and proceed to checkout.",
+      "states": {
+        "loading": "Spinner centered.",
+        "empty": "Empty shopping cart illustration with 'Start Shopping' CTA.",
+        "error": "Failed to load cart."
+      },
+      "layout": "Vertical list of line items (image left, details center, qty selector right). Swipe left to delete. Promo code input block (surfaceTertiary background). Sticky glass footer with Total price and 'Checkout' primary CTA."
+    },
+    {
+      "name": "Checkout",
+      "purpose": "Finalize order details (address, delivery slot, payment).",
+      "states": {
+        "loading": "Overlay spinner while submitting order.",
+        "empty": "N/A",
+        "error": "Payment or address error banner."
+      },
+      "layout": "Accordion or stepped layout: 1. Address Selection (radio list of cards), 2. Delivery Slot, 3. Payment Method (COD/Mock). Fixed bottom area with 'Place Order' CTA."
+    },
+    {
+      "name": "Profile & Orders",
+      "purpose": "Manage user settings, addresses, and view order history.",
+      "states": {
+        "loading": "Spinner.",
+        "empty": "N/A",
+        "error": "Failed to load profile."
+      },
+      "layout": "List layout. Header with user info. Sectioned rows for 'Orders', 'Wishlist', 'Addresses'. Orders detail screen shows vertical timeline of order status."
+    },
+    {
+      "name": "Admin Dashboard",
+      "purpose": "Manage catalog, orders, and view basic KPIs.",
+      "states": {
+        "loading": "Skeleton KPIs.",
+        "empty": "No orders/products yet.",
+        "error": "Failed to load admin data."
+      },
+      "layout": "KPI cards (2-col grid) at top: Total Sales, Orders, Users. Tabbed view or list for Recent Orders and Products inventory."
+    }
+  ],
+  "images": {
+    "promo_banner": {
+      "url": "https://images.unsplash.com/photo-1532795986-dbef1643a596?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2ODh8MHwxfHNlYXJjaHwxfHxmYXNoaW9uJTIwc2FsZSUyMHByb21vdGlvbmFsJTIwYmFubmVyfGVufDB8fHx8MTc4Mzg0MzY2MHww&ixlib=rb-4.1.0&q=85",
+      "alt": "Fashion sale promotion banner with strong typography"
+    },
+    "dummy_product_sneakers": {
+      "url": "https://images.pexels.com/photos/2547007/pexels-photo-2547007.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Minimalist white sneakers on a shelf"
+    },
+    "dummy_product_headphones": {
+      "url": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHwxfHxwcmVtaXVtJTIwd2lyZWxlc3MlMjBoZWFkcGhvbmVzJTIwb3ZlciUyMGVhcnxlbnwwfHx8fDE3ODQ0NTAxMTN8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Premium wireless headphones"
+    },
+    "empty_cart": {
+      "url": "https://images.pexels.com/photos/8481889/pexels-photo-8481889.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Empty small shopping cart illustration"
+    }
+  },
+  "instructions_to_main_agent": [
+    "STRICT COLOR COMPLIANCE: Do not use any shades of blue, purple, indigo, or violet. Stick strictly to the warm sand/stone base and Terracotta/Burnt Orange accents provided in the tokens.",
+    "LAYOUT - PRODUCT GRID: Use a 2-column grid for products on Home and Category screens. Ensure cards use flexWrap with 'space-between' and dynamic width (screenWidth - 2*padding - gap)/2. DO NOT leave hanging orphan cards stretched to 100%.",
+    "LAYOUT - STICKY CTAs: The 'Add to Cart' button on the Product Detail Page and 'Checkout' on the Cart page MUST be placed in a sticky bottom container using safe area insets and glassmorphism over scrolling content.",
+    "LAYOUT - PRODUCT DETAIL: Build the PDP using native Mobile patterns (Mobbin inspired). Large swipeable hero image gallery, price immediately below image, and use @gorhom/bottom-sheet for variant selection (Size/Color).",
+    "IMAGE SCRIMS: Whenever text is placed over a promotional banner or hero image, implement a vertical linear-gradient scrim (transparent to surfaceInverse) to guarantee WCAG contrast.",
+    "FONTS & WEIGHTS: Ensure the maximum font weight used anywhere is 500. Use Plus Jakarta Sans size/scale to establish hierarchy, not extreme weights.",
+    "HAPTICS: Implement tactile feedback explicitly via expo-haptics for 'Add to Cart', variant selections, and checkout success per the haptics config block."
+  ]
+}
