@@ -14,7 +14,7 @@ import { useAuth } from "@/src/auth";
 export default function Login() {
   const router = useRouter();
   const { login, googleLogin } = useAuth();
-  const [email, setEmail] = useState("demo@aura.com");
+  const [email, setEmail] = useState("demo@gkgifts.com");
   const [password, setPassword] = useState("Demo@123");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
