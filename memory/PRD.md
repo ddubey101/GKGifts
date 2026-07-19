@@ -36,7 +36,7 @@ Endpoints prefixed with `/api`:
 - orders: /orders, /orders/{id}, /orders/{id}/cancel
 - reviews: POST /reviews
 - notifications: /notifications, /notifications/read-all
-- admin: /admin/stats, /admin/orders, /admin/orders/{id}/status, POST /admin/products
+- admin: /admin/stats, /admin/orders, /admin/orders/{id}/status, /admin/products (GET list, POST create), PATCH /admin/products/{id}, PATCH /admin/products/{id}/stock, DELETE /admin/products/{id}
 
 ## Seed data
 6 categories, 3 banners, 12 products (with images/variants), 3 coupons, admin + demo user auto-created on startup.

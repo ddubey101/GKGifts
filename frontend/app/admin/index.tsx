@@ -65,6 +65,22 @@ export default function Admin() {
             <Kpi label="Customers" value={String(stats.users)} color={colors.warning} />
             <Kpi label="Products" value={String(stats.products)} color={colors.onSurface} />
           </View>
+
+          <Pressable
+            testID="admin-manage-products"
+            onPress={() => router.push("/admin/products")}
+            style={[s.card, { flexDirection: "row", alignItems: "center", gap: spacing.md }]}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.brandSecondary, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="cube-outline" size={22} color={colors.onBrandSecondary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: "500", fontSize: 15 }}>Manage products</Text>
+              <Text style={{ color: colors.onSurfaceMuted, fontSize: 12, marginTop: 2 }}>Create, edit, restock, delete</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceMuted} />
+          </Pressable>
+
           <View style={s.card}>
             <Text style={typography.h3}>Low stock</Text>
             <Text style={{ color: stats.low_stock > 0 ? colors.error : colors.onSurfaceMuted, marginTop: 6 }}>

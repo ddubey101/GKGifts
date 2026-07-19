@@ -192,6 +192,24 @@ class ProductIn(BaseModel):
     review_count: int = 0
 
 
+class ProductPatchIn(BaseModel):
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    category_id: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    mrp: Optional[float] = None
+    images: Optional[List[str]] = None
+    stock: Optional[int] = None
+    tags: Optional[List[str]] = None
+    variants: Optional[List[dict]] = None
+
+
+class StockPatchIn(BaseModel):
+    stock: Optional[int] = None   # absolute value
+    delta: Optional[int] = None   # relative +/-
+
+
 # ---------- auth ------------------------------------------------------------
 
 @api.post("/auth/register")
@@ -716,6 +734,71 @@ async def admin_product_create(body: ProductIn, _: dict = Depends(require_admin)
     doc = {"product_id": pid, **body.model_dump(), "created_at": now_utc()}
     await db.products.insert_one(dict(doc))
     return _strip(doc)
+
+
+@api.get("/admin/products")
+async def admin_product_list(
+    _: dict = Depends(require_admin),
+    q: Optional[str] = None,
+    category_id: Optional[str] = None,
+    limit: int = Query(100, le=500),
+):
+    query: dict = {}
+    if category_id:
+        query["category_id"] = category_id
+    if q:
+        query["$or"] = [
+            {"name": {"$regex": q, "$options": "i"}},
+            {"brand": {"$regex": q, "$options": "i"}},
+        ]
+    return await db.products.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+
+
+@api.patch("/admin/products/{product_id}")
+async def admin_product_update(
+    product_id: str, body: ProductPatchIn, _: dict = Depends(require_admin)
+):
+    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    if not updates:
+        raise HTTPException(400, "No fields to update")
+    updates["updated_at"] = now_utc()
+    r = await db.products.update_one({"product_id": product_id}, {"$set": updates})
+    if r.matched_count == 0:
+        raise HTTPException(404, "Product not found")
+    return await db.products.find_one({"product_id": product_id}, {"_id": 0})
+
+
+@api.patch("/admin/products/{product_id}/stock")
+async def admin_product_stock(
+    product_id: str, body: StockPatchIn, _: dict = Depends(require_admin)
+):
+    p = await db.products.find_one({"product_id": product_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(404, "Product not found")
+    if body.stock is not None:
+        new_stock = int(body.stock)
+    elif body.delta is not None:
+        new_stock = int(p.get("stock", 0)) + int(body.delta)
+    else:
+        raise HTTPException(400, "Provide stock or delta")
+    if new_stock < 0:
+        new_stock = 0
+    await db.products.update_one(
+        {"product_id": product_id},
+        {"$set": {"stock": new_stock, "updated_at": now_utc()}},
+    )
+    return {"product_id": product_id, "stock": new_stock}
+
+
+@api.delete("/admin/products/{product_id}")
+async def admin_product_delete(product_id: str, _: dict = Depends(require_admin)):
+    r = await db.products.delete_one({"product_id": product_id})
+    if r.deleted_count == 0:
+        raise HTTPException(404, "Product not found")
+    # cascade: remove from carts and wishlists so the app doesn't see dangling refs
+    await db.carts.update_many({}, {"$pull": {"items": {"product_id": product_id}}})
+    await db.wishlists.update_many({}, {"$pull": {"product_ids": product_id}})
+    return {"ok": True, "product_id": product_id}
 
 
 @api.get("/health")
