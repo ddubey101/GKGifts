@@ -28,7 +28,7 @@ export async function setToken(v: string | null) {
 
 export async function api<T = any>(
   path: string,
-  opts: RequestInit & { auth?: boolean } = {}
+  opts: RequestInit & { auth?: boolean; timeoutMs?: number } = {}
 ): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -38,7 +38,20 @@ export async function api<T = any>(
     const tok = await getToken();
     if (tok) headers.Authorization = `Bearer ${tok}`;
   }
-  const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+  const ctrl = new AbortController();
+  const timeoutMs = opts.timeoutMs ?? 15000;
+  const to = setTimeout(() => ctrl.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { ...opts, headers, signal: ctrl.signal });
+  } catch (e: any) {
+    clearTimeout(to);
+    if (e?.name === "AbortError") {
+      throw new Error("Network request timed out. Please check your connection.");
+    }
+    throw new Error(e?.message || "Network error");
+  }
+  clearTimeout(to);
   const text = await res.text();
   const data = text ? JSON.parse(text) : ({} as any);
   if (!res.ok) {

@@ -1,0 +1,30 @@
+{
+  "summary": "Frontend-only regression on the loading-spinner fix. All 4 requested scenarios PASS: (1) Fresh load without token reaches login instantly with 'Welcome to Gk Gifts' heading visible. (2) Stale/bogus token reload lands on login within ~1s (backend returned 401 on /auth/me, catch cleared token). (3) Stall fallback UI ('Taking longer than usual…' + testID='app-loading-retry') appears at ~6.3s when /api/auth/me is deliberately hung via Playwright route, and clicking 'Continue to sign in' navigates to /(auth)/login. (4) Happy-path login with demo@gkgifts.com / Demo@123 succeeds; reload with a real valid token reaches Home immediately with no stall UI. The user-reported infinite-spinner bug is resolved.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "shadow* style props", "issue": "Console warning: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' — appears on every render. Reference: RN web deprecation, likely from theme/shadow presets."},
+      {"component": "pointerEvents prop", "issue": "Console warning: 'props.pointerEvents is deprecated. Use style.pointerEvents.' — appears on every render, likely from a library or wrapper component."}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_4.json"],
+  "action_items": [
+    "(Optional / low-priority) Migrate remaining `shadow*` style props to `boxShadow` and `pointerEvents` prop to `style.pointerEvents` to silence RN-web deprecation warnings. Not user-facing, does not affect this iteration's fix.",
+    "TOKEN_KEY is still the legacy string 'aura_token' (comment in api.ts already notes this). Consider renaming to 'gk_token' in a future iteration for brand consistency — no functional impact."
+  ],
+  "critical_code_review_comments": [
+    "api.ts: AbortController + 15s timeout is correctly implemented and the AbortError is translated to a friendly message. Good.",
+    "app/index.tsx: 6s stall timer + escape-hatch button is clean and does not leak the timer (cleanup on unmount). Verified working.",
+    "auth.tsx refresh(): try/catch correctly clears the token on any /auth/me failure (401, timeout, or network abort), which is what unblocks the fresh-load and stale-token scenarios."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped as requested)", "frontend": "100% (4/4 scenarios pass)"},
+  "seed_data_creation": "None. Used existing seeded demo@gkgifts.com / Demo@123 account.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Loading-spinner bug is fully resolved. TOKEN_KEY in localStorage is 'aura_token'. Stall fallback timer is 6s and testID is 'app-loading-retry'. To reproduce stall scenario in Playwright, use page.route on '**/api/auth/me' with an async handler that sleeps (route.abort makes fetch fail immediately and does NOT trigger the stall).",
+  "rca_of_issue": "Original bug: /index only rendered a bare <ActivityIndicator/> with no timeout on the api() fetch. If /auth/me hung (bad network, proxy stall, etc.), loading stayed true forever and the user saw a permanent spinner. Fix (verified working): (a) api.ts wraps fetch in AbortController with a 15s timeout that rejects with a friendly error, letting refresh() catch → clear token → set loading=false → Gate redirects to login. (b) app/index.tsx now shows the brand logo + a 6s stall detector that reveals a 'Continue to sign in' escape button, so even during the 6-15s window before the timeout fires the user has a manual way out. Both mechanisms verified end-to-end."
+}
