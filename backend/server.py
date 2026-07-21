@@ -850,86 +850,9 @@ DEMO_BANNERS = [
      "cta": "Discover", "link": "cat_home"},
 ]
 
-DEMO_PRODUCTS = [
-    # Electronics
-    {"name": "Aurora Wireless Headphones", "brand": "Sonique", "category_id": "cat_electronics",
-     "price": 4499, "mrp": 6999, "stock": 42, "rating": 4.6, "review_count": 218,
-     "tags": ["flash_sale", "featured", "trending"],
-     "description": "Premium over-ear wireless headphones with ANC and 40h battery life.",
-     "images": [
-         "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800",
-         "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800",
-     ],
-     "variants": [{"name": "Color", "options": ["Onyx", "Sand", "Terracotta"]}]},
-    {"name": "PulseFit Smartwatch S3", "brand": "PulseFit", "category_id": "cat_electronics",
-     "price": 8999, "mrp": 12999, "stock": 30, "rating": 4.4, "review_count": 156,
-     "tags": ["new", "featured"],
-     "description": "AMOLED smartwatch with heart-rate, SpO2, GPS, and 14-day battery.",
-     "images": [
-         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800",
-         "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800",
-     ]},
-    {"name": "Nimbus Bluetooth Speaker", "brand": "Sonique", "category_id": "cat_electronics",
-     "price": 2499, "mrp": 3999, "stock": 80, "rating": 4.2, "review_count": 92,
-     "tags": ["deal", "trending"],
-     "description": "Compact 360° speaker with rich bass and 20h playback.",
-     "images": ["https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800"]},
-    {"name": "Meridian True Wireless Buds", "brand": "Sonique", "category_id": "cat_electronics",
-     "price": 1999, "mrp": 3499, "stock": 120, "rating": 4.3, "review_count": 302,
-     "tags": ["flash_sale", "trending", "top"],
-     "description": "IPX5 sweat-proof, 8h playback + case, low-latency gaming mode.",
-     "images": ["https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800"]},
-    # Fashion
-    {"name": "Terracotta Minimal Sneakers", "brand": "Loft", "category_id": "cat_fashion",
-     "price": 3299, "mrp": 4999, "stock": 60, "rating": 4.5, "review_count": 141,
-     "tags": ["new", "featured"],
-     "description": "Hand-finished leather sneakers with breathable liner.",
-     "images": [
-         "https://images.pexels.com/photos/2547007/pexels-photo-2547007.jpeg?w=800",
-         "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800",
-     ],
-     "variants": [{"name": "Size", "options": ["7", "8", "9", "10", "11"]}]},
-    {"name": "Everyday Linen Shirt", "brand": "North & West", "category_id": "cat_fashion",
-     "price": 1799, "mrp": 2999, "stock": 85, "rating": 4.4, "review_count": 78,
-     "tags": ["deal"],
-     "description": "Breathable linen shirt, relaxed fit, pre-washed for softness.",
-     "images": ["https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800"],
-     "variants": [{"name": "Size", "options": ["S", "M", "L", "XL"]}]},
-    {"name": "Canvas Weekender Bag", "brand": "Loft", "category_id": "cat_fashion",
-     "price": 2599, "mrp": 3999, "stock": 45, "rating": 4.6, "review_count": 63,
-     "tags": ["featured"],
-     "description": "Waxed canvas duffel with leather trims. Fits a 15\" laptop.",
-     "images": ["https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800"]},
-    # Home
-    {"name": "Ceramic Pour-Over Kettle", "brand": "Hearth", "category_id": "cat_home",
-     "price": 1299, "mrp": 1999, "stock": 70, "rating": 4.7, "review_count": 210,
-     "tags": ["top", "featured"],
-     "description": "Hand-thrown ceramic kettle for the perfect pour-over.",
-     "images": ["https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800"]},
-    {"name": "Warm Linen Throw", "brand": "Hearth", "category_id": "cat_home",
-     "price": 1899, "mrp": 2999, "stock": 55, "rating": 4.5, "review_count": 96,
-     "tags": ["new"],
-     "description": "Stone-washed pure linen throw, 130x170 cm.",
-     "images": ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"]},
-    # Beauty
-    {"name": "Rosehip Glow Serum", "brand": "Bloom", "category_id": "cat_beauty",
-     "price": 899, "mrp": 1499, "stock": 200, "rating": 4.8, "review_count": 512,
-     "tags": ["top", "trending"],
-     "description": "Cold-pressed rosehip oil serum. Vegan, 30ml.",
-     "images": ["https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800"]},
-    # Sports
-    {"name": "GripFlex Yoga Mat", "brand": "Move", "category_id": "cat_sports",
-     "price": 1499, "mrp": 2299, "stock": 90, "rating": 4.4, "review_count": 141,
-     "tags": ["deal", "new"],
-     "description": "6mm cushioned TPE mat with alignment lines.",
-     "images": ["https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=800"]},
-    # Books
-    {"name": "The Quiet Craft", "brand": "Ivy Press", "category_id": "cat_books",
-     "price": 499, "mrp": 799, "stock": 300, "rating": 4.7, "review_count": 88,
-     "tags": ["featured"],
-     "description": "A book on the discipline of making meaningful things.",
-     "images": ["https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800"]},
-]
+# Real catalog is loaded via /app/backend/scripts/sync_gkgifts_store.py after
+# startup — no demo products are seeded here anymore.
+DEMO_PRODUCTS: list[dict] = []
 
 DEMO_COUPONS = [
     {"code": "WELCOME10", "type": "percent", "value": 10, "min_order": 999, "max_discount": 300,
