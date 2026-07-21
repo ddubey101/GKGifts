@@ -19,6 +19,7 @@ import jwt as pyjwt
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.routing import APIRouter
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import UpdateOne
 from pydantic import BaseModel, EmailStr, Field
@@ -994,6 +995,12 @@ async def shutdown():
 
 
 app.include_router(api)
+# Serve product images uploaded by admin / seeded from bulk imports.
+app.mount(
+    "/api/images",
+    StaticFiles(directory=str(ROOT_DIR / "static" / "products"), check_dir=False),
+    name="product-images",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
