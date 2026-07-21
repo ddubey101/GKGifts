@@ -43,8 +43,7 @@ export default function Login() {
               style={s.logo}
               resizeMode="contain"
             />
-            <Text style={[typography.h1, { marginTop: spacing.md }]}>Welcome to Gk Gifts</Text>
-            <Text style={{ color: colors.onSurfaceMuted, marginTop: 4 }}>Sign in to continue shopping</Text>
+            <Text style={{ color: colors.onSurfaceMuted, marginTop: spacing.md }}>Sign in to continue shopping</Text>
           </View>
 
           <Text style={s.label}>Email</Text>
