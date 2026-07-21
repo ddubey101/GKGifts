@@ -327,6 +327,15 @@ async def list_banners():
     return banners
 
 
+# Special virtual category IDs → max price (INR). Products endpoint translates
+# these into a price filter instead of a category_id match.
+PRICE_BAND_CATEGORIES = {
+    "cat_under_50": 50,
+    "cat_under_100": 100,
+    "cat_under_200": 200,
+}
+
+
 @api.get("/products")
 async def list_products(
     category_id: Optional[str] = None,
@@ -337,7 +346,9 @@ async def list_products(
     skip: int = 0,
 ):
     query: dict = {}
-    if category_id:
+    if category_id in PRICE_BAND_CATEGORIES:
+        query["price"] = {"$lte": PRICE_BAND_CATEGORIES[category_id]}
+    elif category_id:
         query["category_id"] = category_id
     if tag:
         query["tags"] = tag
@@ -831,6 +842,12 @@ DEMO_CATEGORIES = [
      "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/IMG_6437.PNG"},
     {"category_id": "cat_gifts", "name": "Gifts & Utility", "icon": "gift", "order": 5,
      "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/legacy_b.jpg"},
+    {"category_id": "cat_under_50", "name": "Return Gifts under Rs.50", "icon": "pricetag", "order": 6,
+     "image": "https://m.media-amazon.com/images/X/bxt1/M/9bxt1BL90xaIGYa._SL360_QL95_FMwebp_.png"},
+    {"category_id": "cat_under_100", "name": "Return Gifts under Rs.100", "icon": "pricetag", "order": 7,
+     "image": "https://m.media-amazon.com/images/X/bxt1/M/Fbxt1xQIV0D4tLx._SL360_QL95_FMwebp_.png"},
+    {"category_id": "cat_under_200", "name": "Return Gifts under Rs.200", "icon": "pricetag", "order": 8,
+     "image": "https://m.media-amazon.com/images/X/bxt1/M/mbxt1ROoVacvMOJ._SL360_QL95_FMwebp_.jpg"},
 ]
 
 DEMO_BANNERS = [
