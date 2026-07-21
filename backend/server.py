@@ -821,33 +821,31 @@ async def health():
 # ---------- seed ------------------------------------------------------------
 
 DEMO_CATEGORIES = [
-    {"category_id": "cat_electronics", "name": "Electronics", "icon": "cellphone", "order": 1,
-     "image": "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=400"},
-    {"category_id": "cat_fashion", "name": "Fashion", "icon": "tshirt-crew", "order": 2,
-     "image": "https://images.unsplash.com/photo-1445205170230-053b83016050?w=400"},
-    {"category_id": "cat_home", "name": "Home", "icon": "sofa", "order": 3,
-     "image": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400"},
-    {"category_id": "cat_beauty", "name": "Beauty", "icon": "flower", "order": 4,
-     "image": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400"},
-    {"category_id": "cat_sports", "name": "Sports", "icon": "basketball", "order": 5,
-     "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400"},
-    {"category_id": "cat_books", "name": "Books", "icon": "book", "order": 6,
-     "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400"},
+    {"category_id": "cat_kids_bags", "name": "Kids Bags", "icon": "bag-handle", "order": 1,
+     "image": "https://m.media-amazon.com/images/X/bxt1/M/qbxt1hcgjIRN6nV._SL360_QL95_FMwebp_.png"},
+    {"category_id": "cat_kids_dining", "name": "Kids Dining", "icon": "restaurant", "order": 2,
+     "image": "https://m.media-amazon.com/images/X/bxt1/M/Fbxt1xQIV0D4tLx._SL360_QL95_FMwebp_.png"},
+    {"category_id": "cat_kids_room", "name": "Kids Room", "icon": "happy", "order": 3,
+     "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/IMG_6410.JPG"},
+    {"category_id": "cat_drinkware", "name": "Drinkware", "icon": "cafe", "order": 4,
+     "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/IMG_6437.PNG"},
+    {"category_id": "cat_gifts", "name": "Gifts & Utility", "icon": "gift", "order": 5,
+     "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/legacy_b.jpg"},
 ]
 
 DEMO_BANNERS = [
     {"banner_id": "bn1", "order": 1,
-     "title": "Autumn Sale", "subtitle": "Up to 60% off",
-     "image": "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200",
-     "cta": "Shop now", "link": "cat_fashion"},
+     "title": "Kids Bags Sale", "subtitle": "Up to 42% off",
+     "image": "https://m.media-amazon.com/images/X/bxt1/M/qbxt1hcgjIRN6nV._SL360_QL95_FMwebp_.png",
+     "cta": "Shop now", "link": "cat_kids_bags"},
     {"banner_id": "bn2", "order": 2,
-     "title": "New Audio", "subtitle": "Premium headphones",
-     "image": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=1200",
-     "cta": "Explore", "link": "cat_electronics"},
+     "title": "Mealtime Magic", "subtitle": "Cutlery, lunch boxes & more",
+     "image": "https://m.media-amazon.com/images/X/bxt1/M/Fbxt1xQIV0D4tLx._SL360_QL95_FMwebp_.png",
+     "cta": "Explore", "link": "cat_kids_dining"},
     {"banner_id": "bn3", "order": 3,
-     "title": "Home refresh", "subtitle": "Cozy living, minimal prices",
-     "image": "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200",
-     "cta": "Discover", "link": "cat_home"},
+     "title": "Little Room, Big Joy", "subtitle": "Clocks, storage & hair clips",
+     "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/IMG_6410.JPG",
+     "cta": "Discover", "link": "cat_kids_room"},
 ]
 
 # Real catalog is loaded via /app/backend/scripts/sync_gkgifts_store.py after
