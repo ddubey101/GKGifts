@@ -77,7 +77,6 @@ export default function ProductDetail() {
         </View>
 
         <View style={{ padding: spacing.lg, gap: 8 }}>
-          <Text style={{ fontSize: 12, color: colors.onSurfaceMuted, textTransform: "uppercase", letterSpacing: 0.6 }}>{p.brand}</Text>
           <Text style={{ ...typography.h1, fontSize: 22 }}>{p.name}</Text>
           <Rating value={p.rating || 0} count={p.review_count} />
           <View style={{ marginTop: 8 }}><Price price={p.price} mrp={p.mrp} size={22} /></View>

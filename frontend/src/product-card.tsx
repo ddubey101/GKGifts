@@ -33,7 +33,6 @@ export function ProductCard({ product, width }: { product: any; width?: number }
         </Pressable>
       </View>
       <View style={{ padding: spacing.md, gap: 4 }}>
-        <Text style={styles.brand} numberOfLines={1}>{product.brand}</Text>
         <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
         <Price price={product.price} mrp={product.mrp} size={14} />
         <View style={{ marginTop: 4 }}>

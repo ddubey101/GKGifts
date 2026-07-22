@@ -45,7 +45,6 @@ export default function Cart() {
               <Image source={{ uri: item.product.images?.[0] }} style={s.thumb} contentFit="cover" />
             </Pressable>
             <View style={{ flex: 1, gap: 4 }}>
-              <Text style={{ fontSize: 11, color: colors.onSurfaceMuted, textTransform: "uppercase" }}>{item.product.brand}</Text>
               <Text style={{ fontWeight: "500", color: colors.onSurface }} numberOfLines={2}>{item.product.name}</Text>
               {!!item.variant && <Text style={{ fontSize: 12, color: colors.onSurfaceMuted }}>Variant: {item.variant}</Text>}
               <Price price={item.product.price} mrp={item.product.mrp} size={14} />
