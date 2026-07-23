@@ -1,8 +1,9 @@
 // Product card used in grids and horizontal rails.
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { colors, radius, shadow, spacing } from "./theme";
 import { Price, Rating } from "./ui";
@@ -10,8 +11,27 @@ import { useCart } from "./cart-store";
 
 export function ProductCard({ product, width }: { product: any; width?: number }) {
   const router = useRouter();
-  const { toggleWishlist, isWished } = useCart();
+  const { toggleWishlist, isWished, addToCart } = useCart();
   const wished = isWished(product.product_id);
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const onAdd = async (e: any) => {
+    e?.stopPropagation?.();
+    if (adding || added) return;
+    setAdding(true);
+    try {
+      await addToCart(product.product_id, 1, null);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1400);
+    } catch {
+      // swallow; PDP tap-through still available
+    } finally {
+      setAdding(false);
+    }
+  };
+
   return (
     <Pressable
       testID={`product-card-${product.product_id}`}
@@ -35,8 +55,22 @@ export function ProductCard({ product, width }: { product: any; width?: number }
       <View style={{ padding: spacing.md, gap: 4 }}>
         <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
         <Price price={product.price} mrp={product.mrp} size={14} />
-        <View style={{ marginTop: 4 }}>
+        <View style={styles.metaRow}>
           <Rating value={product.rating || 0} count={product.review_count} />
+          <Pressable
+            testID={`card-add-to-cart-${product.product_id}`}
+            onPress={onAdd}
+            disabled={adding}
+            style={[styles.addBtn, added && styles.addBtnAdded]}
+            hitSlop={6}
+          >
+            <Ionicons
+              name={added ? "checkmark" : "bag-add"}
+              size={12}
+              color={colors.onBrand}
+            />
+            <Text style={styles.addBtnText}>{added ? "Added" : "Add"}</Text>
+          </Pressable>
         </View>
       </View>
     </Pressable>
@@ -63,6 +97,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  brand: { fontSize: 11, color: colors.onSurfaceMuted, textTransform: "uppercase", letterSpacing: 0.5 },
   name: { fontSize: 13, color: colors.onSurface, fontWeight: "500", minHeight: 32 },
+  metaRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
+  },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.brandPrimary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    flexShrink: 0,
+  },
+  addBtnAdded: { backgroundColor: colors.success },
+  addBtnText: { color: colors.onBrand, fontSize: 11, fontWeight: "600" },
 });
