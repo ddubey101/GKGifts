@@ -842,11 +842,11 @@ DEMO_CATEGORIES = [
      "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/IMG_6437.PNG"},
     {"category_id": "cat_gifts", "name": "Gifts & Utility", "icon": "gift", "order": 5,
      "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/legacy_b.jpg"},
-    {"category_id": "cat_under_50", "name": "Return Gifts under Rs.50", "icon": "pricetag", "order": 6,
+    {"category_id": "cat_under_50", "name": "Gifts under Rs.50", "icon": "pricetag", "order": 6,
      "image": "https://m.media-amazon.com/images/X/bxt1/M/9bxt1BL90xaIGYa._SL360_QL95_FMwebp_.png"},
-    {"category_id": "cat_under_100", "name": "Return Gifts under Rs.100", "icon": "pricetag", "order": 7,
+    {"category_id": "cat_under_100", "name": "Gifts under Rs.100", "icon": "pricetag", "order": 7,
      "image": "https://m.media-amazon.com/images/X/bxt1/M/Fbxt1xQIV0D4tLx._SL360_QL95_FMwebp_.png"},
-    {"category_id": "cat_under_200", "name": "Return Gifts under Rs.200", "icon": "pricetag", "order": 8,
+    {"category_id": "cat_under_200", "name": "Gifts under Rs.200", "icon": "pricetag", "order": 8,
      "image": "https://m.media-amazon.com/images/X/bxt1/M/mbxt1ROoVacvMOJ._SL360_QL95_FMwebp_.jpg"},
 ]
 
