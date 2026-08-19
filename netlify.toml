@@ -1,0 +1,20 @@
+[build]
+  # Emergent frontend lives under /app/frontend.
+  base = "frontend"
+  # Bake the API base into the JS bundle at build time so the client always
+  # talks to your live backend (Render) instead of a same-origin path.
+  command = "yarn install --frozen-lockfile && npx expo export --platform web --output-dir dist"
+  publish = "frontend/dist"
+
+# SPA fallback: expo-router uses client-side routing, so every unknown path
+# must return the built index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Long-cache the bundled JS/CSS/font hashes (expo-router emits hashed filenames).
+[[headers]]
+  for = "/_expo/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

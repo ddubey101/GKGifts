@@ -31,6 +31,14 @@ load_dotenv(ROOT_DIR / ".env")
 MONGO_URL = os.environ["MONGO_URL"]
 DB_NAME = os.environ["DB_NAME"]
 
+# Base URL where THIS backend is publicly reachable. Used to build absolute
+# image URLs baked into category/banner seed rows so mobile clients on any
+# origin can load them. Falls back to the Emergent preview URL for local dev.
+PUBLIC_BACKEND_URL = os.environ.get(
+    "PUBLIC_BACKEND_URL",
+    "https://scalable-marketplace-4.preview.emergentagent.com",
+).rstrip("/")
+
 JWT_SECRET = os.environ.get("JWT_SECRET", "aura-commerce-dev-secret-change-me")
 JWT_ALG = "HS256"
 JWT_TTL_HOURS = 24 * 7  # 7 days
@@ -837,11 +845,11 @@ DEMO_CATEGORIES = [
     {"category_id": "cat_kids_dining", "name": "Kids Dining", "icon": "restaurant", "order": 2,
      "image": "https://m.media-amazon.com/images/X/bxt1/M/Fbxt1xQIV0D4tLx._SL360_QL95_FMwebp_.png"},
     {"category_id": "cat_kids_room", "name": "Kids Room", "icon": "happy", "order": 3,
-     "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/IMG_6410.JPG"},
+     "image": f"{PUBLIC_BACKEND_URL}/api/images/IMG_6410.JPG"},
     {"category_id": "cat_drinkware", "name": "Drinkware", "icon": "cafe", "order": 4,
-     "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/IMG_6437.PNG"},
+     "image": f"{PUBLIC_BACKEND_URL}/api/images/IMG_6437.PNG"},
     {"category_id": "cat_gifts", "name": "Gifts & Utility", "icon": "gift", "order": 5,
-     "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/legacy_b.jpg"},
+     "image": f"{PUBLIC_BACKEND_URL}/api/images/legacy_b.jpg"},
     {"category_id": "cat_under_50", "name": "Gifts under Rs.50", "icon": "pricetag", "order": 6,
      "image": "https://m.media-amazon.com/images/X/bxt1/M/9bxt1BL90xaIGYa._SL360_QL95_FMwebp_.png"},
     {"category_id": "cat_under_100", "name": "Gifts under Rs.100", "icon": "pricetag", "order": 7,
@@ -861,7 +869,7 @@ DEMO_BANNERS = [
      "cta": "Explore", "link": "cat_kids_dining"},
     {"banner_id": "bn3", "order": 3,
      "title": "Little Room, Big Joy", "subtitle": "Clocks, storage & hair clips",
-     "image": "https://scalable-marketplace-4.preview.emergentagent.com/api/images/IMG_6410.JPG",
+     "image": f"{PUBLIC_BACKEND_URL}/api/images/IMG_6410.JPG",
      "cta": "Discover", "link": "cat_kids_room"},
 ]
 

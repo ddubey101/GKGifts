@@ -1,0 +1,22 @@
+# Render blueprint for the FastAPI backend.
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: gkgifts-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MONGO_URL
+        sync: false      # paste your Atlas connection string in the Render dashboard
+      - key: DB_NAME
+        value: gkgifts_prod
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PUBLIC_BACKEND_URL
+        sync: false      # paste your live backend URL after first deploy (e.g. https://gkgifts-api.onrender.com)
