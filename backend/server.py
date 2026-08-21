@@ -17,13 +17,16 @@ import bcrypt
 import httpx
 import jwt as pyjwt
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
 from fastapi.routing import APIRouter
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import UpdateOne
 from pydantic import BaseModel, EmailStr, Field
 from starlette.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
+
+from r2_storage import is_configured as r2_configured, new_key as r2_new_key, upload_bytes as r2_upload_bytes
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -765,6 +768,31 @@ async def admin_product_create(body: ProductIn, _: dict = Depends(require_admin)
     doc = {"product_id": pid, **body.model_dump(), "created_at": now_utc()}
     await db.products.insert_one(dict(doc))
     return _strip(doc)
+
+
+ALLOWED_UPLOAD_CT = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
+
+
+@api.post("/admin/upload-image")
+async def admin_upload_image(
+    file: UploadFile = File(...),
+    _: dict = Depends(require_admin),
+):
+    """Upload a product image to Cloudflare R2 and return its public URL."""
+    if not r2_configured():
+        raise HTTPException(503, "Image storage is not configured")
+    if file.content_type not in ALLOWED_UPLOAD_CT:
+        raise HTTPException(400, f"Unsupported content-type {file.content_type}")
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, f"File exceeds {MAX_UPLOAD_BYTES // 1024 // 1024} MB")
+    if not data:
+        raise HTTPException(400, "Empty file")
+    key = r2_new_key(file.filename or "upload.bin")
+    url = await run_in_threadpool(r2_upload_bytes, data, key, file.content_type)
+    return {"url": url, "key": key, "size": len(data)}
+
 
 
 @api.get("/admin/products")
