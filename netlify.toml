@@ -4,7 +4,7 @@
   # Bake the API base into the JS bundle at build time so the client always
   # talks to your live backend (Render) instead of a same-origin path.
   command = "yarn install --frozen-lockfile && npx expo export --platform web --output-dir dist"
-  publish = "frontend/dist"
+  publish = "dist"
 
 # SPA fallback: expo-router uses client-side routing, so every unknown path
 # must return the built index.html.
