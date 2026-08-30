@@ -26,10 +26,12 @@ from pydantic import BaseModel, EmailStr, Field
 from starlette.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 
-from r2_storage import is_configured as r2_configured, new_key as r2_new_key, upload_bytes as r2_upload_bytes
-
+# Load env BEFORE importing r2_storage — that module reads R2_* env vars at
+# module-import time, so it must see the values loaded from backend/.env.
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
+
+from r2_storage import is_configured as r2_configured, new_key as r2_new_key, upload_bytes as r2_upload_bytes  # noqa: E402
 
 MONGO_URL = os.environ["MONGO_URL"]
 DB_NAME = os.environ["DB_NAME"]
