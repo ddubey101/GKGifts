@@ -13,10 +13,6 @@ import { CartProvider } from "@/src/cart-store";
 LogBox.ignoreAllLogs(true);
 SplashScreen.preventAutoHideAsync();
 
-// On web, constrain the app to a phone-width column centered on screen so
-// wide monitors don't stretch the mobile-first UI. Native / Expo Go keep
-// the full-width layout unchanged.
-const APP_MAX_WIDTH = 480;
 const isWeb = Platform.OS === "web";
 
 function Gate() {
@@ -50,10 +46,8 @@ export default function RootLayout() {
         <BottomSheetModalProvider>
           <AuthProvider>
             <CartProvider>
-              <View style={isWeb ? styles.webPage : styles.nativePage}>
-                <View style={isWeb ? styles.webApp : styles.nativeApp}>
-                  <Gate />
-                </View>
+              <View style={styles.page}>
+                <Gate />
               </View>
             </CartProvider>
           </AuthProvider>
@@ -65,24 +59,5 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  // Native (Expo Go / iOS / Android build): fill the device.
-  nativePage: { flex: 1, backgroundColor: "#F9F9F8" },
-  nativeApp: { flex: 1, backgroundColor: "#F9F9F8" },
-  // Web: dark neutral outside the app "phone", app itself capped at 480px.
-  webPage: {
-    flex: 1,
-    backgroundColor: "#1A1A1A",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "100vh" as any,
-  },
-  webApp: {
-    flex: 1,
-    width: "100%",
-    maxWidth: APP_MAX_WIDTH,
-    backgroundColor: "#F9F9F8",
-    ...(Platform.OS === "web"
-      ? ({ boxShadow: "0 8px 40px rgba(0,0,0,0.25)" } as any)
-      : {}),
-  },
+  page: { flex: 1, backgroundColor: "#F9F9F8" },
 });

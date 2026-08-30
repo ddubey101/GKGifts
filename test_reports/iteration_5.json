@@ -1,0 +1,33 @@
+{
+  "summary": "Backend regression on data cleanup + admin upload endpoint. 8/8 tests pass after fixing one env-load-order bug. All 6 requested scenarios verified: (1) GET /api/products returns exactly 19; deleted dupes 'Peppa Pig Kids Cutlery Set' and '3D Cat Kids Travel Luggage' are gone; renamed real-store variants 'Peppa Pig Cutlery Set' (Rs.150) and 'Kids 3D Pink Cat Hard-Shell Cabin Trolley Bag' (Rs.1350) both present. (2) GET /api/categories returns 8: 5 real (Kids Bags, Kids Dining, Kids Room, Drinkware, Gifts & Utility) + 3 price-band (cat_under_50/100/200). (3) Price-band filter cat_under_200 returns exactly 3 (Peppa Pig Cutlery Rs.150, Unicorn Kids Cutlery Rs.150, Drawstring Utility Pouch Rs.120); cat_under_50 returns []. (4) GET /api/banners returns 3, all image URLs on pub-fe940a8553ae4773a90ce6b556da5d88.r2.dev or m.media-amazon.com; none on preview.emergentagent.com. (5) Auth+cart smoke: demo login -> empty cart -> add 1 item -> cart shows count=1 with correct line_total. (6) POST /api/admin/upload-image: 401 unauth; 200 admin with 1x1 PNG returns url starting https://pub-fe940a8553ae4773a90ce6b556da5d88.r2.dev/products/.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_data_cleanup_regression.py",
+    "/app/test_reports/pytest/pytest_data_cleanup_regression.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FIXED (env load order): r2_storage.py reads R2_* env vars at module import time (module-level constants at lines 17-21). server.py was importing r2_storage BEFORE calling load_dotenv(), so all R2_* constants were empty strings and r2_configured() always returned False, causing every /api/admin/upload-image call to fail with 503 'Image storage is not configured'. Fix: moved load_dotenv() above the r2_storage import in server.py. Consider a defensive follow-up: make r2_storage read env lazily inside is_configured()/_client() rather than at import time, so it's robust to import-order changes.",
+    "server.py: admin/upload-image endpoint correctly enforces content-type allowlist, 5MB size cap, non-empty body, and require_admin dependency. Good.",
+    "server.py: price-band virtual categories (cat_under_50/100/200) are handled by mapping category_id -> price ceiling in the products query. Working as intended (cat_under_200 -> 3, cat_under_50 -> 0)."
+  ],
+  "updated_files": [
+    "/app/backend/server.py (moved load_dotenv() above r2_storage import so R2 env vars are populated at import time)",
+    "/app/backend/tests/test_data_cleanup_regression.py (new regression test, 8 test cases)"
+  ],
+  "success_rate": {"backend": "100% (8/8)", "frontend": "not tested (skipped per request)"},
+  "seed_data_creation": "None. Test uses existing seeded demo@gkgifts.com / admin@gkgifts.com accounts. The admin upload test writes one 1x1 PNG to R2 under products/<uuid>.png — this is a real (tiny) R2 object left behind for verification purposes.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "R2 upload endpoint /api/admin/upload-image is live and working end-to-end against Cloudflare R2 bucket 'gkgifts-images' -> public host pub-fe940a8553ae4773a90ce6b556da5d88.r2.dev. Env vars R2_ENDPOINT / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET / R2_PUBLIC_URL are set in backend/.env. Local Mongo currently has 19 products, 8 categories, 3 banners. Demo cart uses tax=5%, shipping=Rs.49 below Rs.499 subtotal.",
+  "rca_of_issue": "Only bug found and fixed this iteration: env-load-order bug in server.py. r2_storage.py evaluates os.environ.get('R2_*') at module import (module-level constants). server.py originally did `from r2_storage import ...` BEFORE `load_dotenv(ROOT_DIR / '.env')`, so those constants captured empty strings and is_configured() always returned False. Reproduction: any POST /api/admin/upload-image as admin returned 503 'Image storage is not configured' despite valid R2 creds in .env. Mitigation applied: reordered server.py so load_dotenv() runs before the r2_storage import. All 8 regression tests now pass including the R2 upload round-trip."
+}

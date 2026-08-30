@@ -52,7 +52,7 @@ def rewrite(url: str | None) -> str | None:
     """Swap a legacy /api/images/<file> URL for its R2 equivalent, else pass through."""
     if not url:
         return url
-    if url.startswith(R2_PUBLIC_URL):
+    if url.startswith(R2_PUBLIC_URL()):
         return url  # already migrated
     for marker, new in old_to_new.items():
         if marker in url:
