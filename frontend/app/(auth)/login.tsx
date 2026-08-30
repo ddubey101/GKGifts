@@ -14,8 +14,8 @@ import { useAuth } from "@/src/auth";
 export default function Login() {
   const router = useRouter();
   const { login, googleLogin } = useAuth();
-  const [email, setEmail] = useState("demo@gkgifts.com");
-  const [password, setPassword] = useState("Demo@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -78,12 +78,6 @@ export default function Login() {
               New here? <Text style={{ color: colors.brandPrimary, fontWeight: "500" }}>Create account</Text>
             </Text>
           </Pressable>
-
-          <View style={s.hint}>
-            <Text style={s.hintTitle}>Demo credentials</Text>
-            <Text style={s.hintText}>Customer: demo@gkgifts.com / Demo@123</Text>
-            <Text style={s.hintText}>Admin: admin@gkgifts.com / Admin@123</Text>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
