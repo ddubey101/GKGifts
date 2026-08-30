@@ -58,7 +58,8 @@ export function ProductCard({ product, width }: { product: any; width?: number }
       style={[styles.card, width ? { width } : { flex: 1 }]}
     >
       <View style={styles.imageWrap}>
-        <Image source={{ uri: product.images?.[0] }} style={styles.image} contentFit="cover" transition={200} />
+        {/* Use contain so images are not cropped/stretched and remain inside the card */}
+        <Image source={{ uri: product.images?.[0] }} style={styles.image} contentFit="contain" transition={200} />
         <Pressable
           testID={`wishlist-toggle-${product.product_id}`}
           onPress={(e) => {
@@ -75,7 +76,10 @@ export function ProductCard({ product, width }: { product: any; width?: number }
         <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
         <Price price={product.price} mrp={product.mrp} size={14} />
         <View style={styles.metaRow}>
-          <Rating value={product.rating || 0} count={product.review_count} />
+          {/* Give the rating room so the Add button doesn't get pushed out */}
+          <View style={{ flex: 1 }}>
+            <Rating value={product.rating || 0} count={product.review_count} />
+          </View>
 
           {qty === 0 ? (
             <Pressable
@@ -134,7 +138,14 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...shadow.card,
   },
-  imageWrap: { position: "relative", aspectRatio: 1, backgroundColor: colors.surfaceTertiary },
+  imageWrap: {
+    position: "relative",
+    aspectRatio: 1,
+    backgroundColor: colors.surfaceTertiary,
+    borderTopLeftRadius: radius.md,
+    borderTopRightRadius: radius.md,
+    overflow: "hidden",
+  },
   image: { width: "100%", height: "100%" },
   heart: {
     position: "absolute",
@@ -152,7 +163,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     gap: 6,
     minHeight: 30,
   },

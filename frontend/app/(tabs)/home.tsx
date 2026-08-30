@@ -136,13 +136,18 @@ export default function Home() {
 
         {/* Featured grid */}
         <SectionHeader title="Featured for you" />
-        <View style={s.grid}>
-          {featured.map((p) => (
-            <View key={p.product_id} style={{ width: CARD_W, marginBottom: GRID_GAP }}>
-              <ProductCard product={p} width={CARD_W} />
+        <FlatList
+          data={featured}
+          keyExtractor={(p) => p.product_id}
+          numColumns={2}
+          columnWrapperStyle={{ gap: GRID_GAP, paddingHorizontal: H_PAD }}
+          contentContainerStyle={{ paddingBottom: spacing.xxxl, gap: GRID_GAP }}
+          renderItem={({ item }) => (
+            <View style={{ width: CARD_W, marginBottom: GRID_GAP }}>
+              <ProductCard product={item} width={CARD_W} />
             </View>
-          ))}
-        </View>
+          )}
+        />
 
         {/* New arrivals */}
         {newIn.length > 0 && (
@@ -175,7 +180,7 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
 const s = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: H_PAD, paddingVertical: spacing.md, backgroundColor: colors.surface },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
-  searchBar: { marginHorizontal: H_PAD, marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderColor: colors.border },
+  searchBar: { marginHorizontal: H_PAD, marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   banner: { width: SCREEN_W - H_PAD * 2 - 40, height: 160, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surfaceTertiary },
   bannerScrim: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0 },
   bannerText: { position: "absolute", left: spacing.lg, bottom: spacing.lg, gap: 4 },
