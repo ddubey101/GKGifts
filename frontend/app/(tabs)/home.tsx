@@ -49,7 +49,7 @@ export default function Home() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
       <View style={[s.centerRow, { paddingHorizontal: hPad, backgroundColor: colors.surface }]}>
         <View style={[s.headerInner, { maxWidth: contentMax }]}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Pressable testID="home-logo" onPress={() => router.push("/(tabs)/home")} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <RNImage
               source={require("../../assets/images/gk-logo.png")}
               style={{ width: 36, height: 36 }}
@@ -59,7 +59,7 @@ export default function Home() {
               <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
               <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
             </View>
-          </View>
+          </Pressable>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Pressable testID="header-notifications" onPress={() => router.push("/notifications")} style={s.headerBtn}>
               <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
@@ -185,7 +185,7 @@ const s = StyleSheet.create({
     alignItems: "center", paddingVertical: spacing.md,
   },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
-  searchBar: { marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderColor: colors.border },
+  searchBar: { marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: spacing.sm },
   banner: { height: 160, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surfaceTertiary },
   bannerScrim: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0 },
   bannerText: { position: "absolute", left: spacing.lg, bottom: spacing.lg, gap: 4 },
