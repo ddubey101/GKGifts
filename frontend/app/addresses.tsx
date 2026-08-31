@@ -8,6 +8,7 @@ import { useRouter } from "expo-router";
 import { api } from "@/src/api";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { Button } from "@/src/ui";
+import { AppHeader } from "@/src/app-header";
 
 export default function Addresses() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function Addresses() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top", "bottom"]}>
+      <AppHeader showNotifications={false} showWishlist={false} />
       <View style={s.header}>
         <Pressable testID="addr-back" onPress={() => router.back()} style={s.btn}><Ionicons name="chevron-back" size={22} color={colors.onSurface} /></Pressable>
         <Text style={typography.h2}>Addresses</Text>
