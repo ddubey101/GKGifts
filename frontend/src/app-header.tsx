@@ -19,7 +19,7 @@ export function AppHeader({ showNotifications = true, showWishlist = true, hPad 
       <View style={[s.headerInner, { maxWidth: contentMax }]}>
         <Pressable testID="home-logo" onPress={() => router.push("/(tabs)/home")} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <RNImage
-            source={require("../../assets/images/gk-logo.png")}
+            source={require("../assets/images/gk-logo.png")}
             style={{ width: 36, height: 36 }}
             resizeMode="contain"
           />
