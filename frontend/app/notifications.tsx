@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { api } from "@/src/api";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { EmptyState } from "@/src/ui";
+import { AppHeader } from "@/src/app-header";
 
 export default function Notifications() {
   const router = useRouter();
@@ -21,11 +22,7 @@ export default function Notifications() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-      <View style={s.header}>
-        <Pressable testID="notif-back" onPress={() => router.back()} style={s.btn}><Ionicons name="chevron-back" size={22} color={colors.onSurface} /></Pressable>
-        <Text style={typography.h2}>Notifications</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader title="Notifications" showNotifications={false} showWishlist={false} hPad={spacing.lg} />
       <FlatList
         data={items}
         keyExtractor={(n) => n.notif_id}

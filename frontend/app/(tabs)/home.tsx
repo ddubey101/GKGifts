@@ -12,6 +12,7 @@ import { useAuth } from "@/src/auth";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { ProductCard } from "@/src/product-card";
 import { useResponsiveCols } from "@/src/use-responsive-cols";
+import { AppHeader } from "@/src/app-header";
 
 export default function Home() {
   const router = useRouter();
@@ -47,43 +48,13 @@ export default function Home() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-      <View style={[s.centerRow, { paddingHorizontal: hPad, backgroundColor: colors.surface }]}>
-        <View style={[s.headerInner, { maxWidth: contentMax }]}>
-          <Pressable testID="home-logo" onPress={() => router.push("/(tabs)/home")} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <RNImage
-              source={require("../../assets/images/gk-logo.png")}
-              style={{ width: 36, height: 36 }}
-              resizeMode="contain"
-            />
-            <View>
-              <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
-              <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
-            </View>
-          </Pressable>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Pressable testID="header-notifications" onPress={() => router.push("/notifications")} style={s.headerBtn}>
-              <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
-            </Pressable>
-            <Pressable testID="header-wishlist" onPress={() => router.push("/wishlist")} style={s.headerBtn}>
-              <Ionicons name="heart-outline" size={20} color={colors.onSurface} />
-            </Pressable>
-          </View>
-        </View>
-      </View>
+      <AppHeader userName={user?.name || "Shopper"} showSearch={true} hPad={hPad} contentMax={contentMax} />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: spacing.xxxl, alignItems: "center" }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brandPrimary} />}
       >
         <View style={{ width: "100%", maxWidth: contentMax }}>
-          <Pressable
-            testID="home-search-bar"
-            onPress={() => router.push("/(tabs)/search")}
-            style={[s.searchBar, { marginHorizontal: hPad }]}
-          >
-            <Ionicons name="search" size={18} color={colors.onSurfaceMuted} />
-            <Text style={{ color: colors.onSurfaceMuted }}>Search for products, brands…</Text>
-          </Pressable>
 
           <FlatList
             data={banners}
@@ -185,7 +156,7 @@ const s = StyleSheet.create({
     alignItems: "center", paddingVertical: spacing.md,
   },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
-  searchBar: { marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  searchBar: { marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: ["center"] as any, gap: spacing.md },
   banner: { height: 160, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surfaceTertiary },
   bannerScrim: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0 },
   bannerText: { position: "absolute", left: spacing.lg, bottom: spacing.lg, gap: 4 },
