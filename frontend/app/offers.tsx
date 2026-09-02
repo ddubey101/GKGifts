@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import { api } from "@/src/api";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import { AppHeader } from "@/src/app-header";
 
 export default function Offers() {
   const router = useRouter();
@@ -25,11 +26,7 @@ export default function Offers() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-      <View style={s.header}>
-        <Pressable testID="offers-back" onPress={() => router.back()} style={s.btn}><Ionicons name="chevron-back" size={22} color={colors.onSurface} /></Pressable>
-        <Text style={typography.h2}>Offers & Coupons</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader title="Offers & Coupons" showNotifications={false} showWishlist={false} hPad={spacing.lg} />
       <FlatList
         data={items}
         keyExtractor={(c) => c.code}
@@ -59,7 +56,3 @@ const s = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   btn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   coupon: { flexDirection: "row", backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
-  couponLeft: { width: 72, alignItems: "center", justifyContent: "center" },
-  codeBox: { backgroundColor: colors.brandSecondary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.sm, borderStyle: "dashed", borderWidth: 1, borderColor: colors.brandPrimary },
-  copyBtn: { paddingHorizontal: 12, paddingVertical: 6 },
-});
