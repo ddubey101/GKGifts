@@ -48,4 +48,4 @@ export default function Cart() {
               <Price price={item.product.price} mrp={item.product.mrp} size={14} />
               <View style={s.qty}>
                 <Pressable testID={`qty-dec-${item.product_id}`} onPress={() => updateCart(item.product_id, item.quantity - 1, item.variant)} style={s.qtyBtn}><Ionicons name="remove" size={16} color={colors.onSurface} /></Pressable>
-                <Text style={{ minWidth: 20, textAlign: "center", fontWeight: "500" }}>{item.quantity}</Text>
+                <Text style={{ minWidth: 20, textAlign: "center", fontWeight: "500" }}>{item.quantity}</Text>))
