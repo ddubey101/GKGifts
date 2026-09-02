@@ -48,4 +48,44 @@ export default function Cart() {
               <Price price={item.product.price} mrp={item.product.mrp} size={14} />
               <View style={s.qty}>
                 <Pressable testID={`qty-dec-${item.product_id}`} onPress={() => updateCart(item.product_id, item.quantity - 1, item.variant)} style={s.qtyBtn}><Ionicons name="remove" size={16} color={colors.onSurface} /></Pressable>
-                <Text style={{ minWidth: 20, textAlign: "center", fontWeight: "500" }}>{item.quantity}</Text>))
+                <Text style={{ minWidth: 20, textAlign: "center", fontWeight: "500" }}>{item.quantity}</Text>
+                <Pressable testID={`qty-inc-${item.product_id}`} onPress={() => updateCart(item.product_id, item.quantity + 1, item.variant)} style={s.qtyBtn}><Ionicons name="add" size={16} color={colors.onSurface} /></Pressable>
+                <Pressable testID={`qty-del-${item.product_id}`} onPress={() => updateCart(item.product_id, 0, item.variant)} style={{ marginLeft: "auto", padding: 6 }}><Ionicons name="trash-outline" size={18} color={colors.onSurfaceMuted} /></Pressable>
+              </View>
+            </View>
+          </View>
+        )}
+      />
+
+      <View style={s.footer}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.onSurfaceMuted }}>Subtotal</Text>
+          <Text style={{ fontWeight: "500" }}>₹{cart.subtotal.toLocaleString("en-IN")}</Text>
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.onSurfaceMuted }}>Shipping</Text>
+          <Text>{cart.shipping === 0 ? "Free" : `₹${cart.shipping}`}</Text>
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.onSurfaceMuted }}>Tax (5%)</Text>
+          <Text>₹{cart.tax}</Text>
+        </View>
+        <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 6 }} />
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ fontWeight: "500", fontSize: 16 }}>Total</Text>
+          <Text style={{ fontWeight: "500", fontSize: 16 }}>₹{cart.total.toLocaleString("en-IN")}</Text>
+        </View>
+        <Button testID="checkout-cta" title="Proceed to Checkout" onPress={() => router.push("/checkout")} style={{ marginTop: 12 }} />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  header: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  row: { flexDirection: "row", gap: spacing.md, backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
+  thumb: { width: 84, height: 84, borderRadius: radius.sm, backgroundColor: colors.surfaceTertiary },
+  qty: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 6 },
+  qtyBtn: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.surfaceTertiary, alignItems: "center", justifyContent: "center" },
+  footer: { position: "absolute", left: 0, right: 0, bottom: 0, backgroundColor: colors.surfaceSecondary, padding: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border, gap: 4 },
+});
