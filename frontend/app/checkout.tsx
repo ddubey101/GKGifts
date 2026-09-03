@@ -104,7 +104,10 @@ export default function Checkout() {
               </Pressable>
             ))}
             {!showAddForm ? (
-              <Pressable testID="add-address-btn" onPress={() => setShowAddForm(true)} style={s.addBtn}><Ionicons name="add" size={16} color={colors.brandPrimary} /><Text style={{ color: colors.brandPrimary, fontWeight: "500" }}>Add new address</Text></Pressable>
+              <Pressable testID="add-address-btn" onPress={() => setShowAddForm(true)} style={s.addBtn}>
+                <Ionicons name="add" size={16} color={colors.brandPrimary} />
+                <Text style={{ color: colors.brandPrimary, fontWeight: "500" }}>Add address</Text>
+              </Pressable>
             ) : (
               <View style={{ gap: 8, marginTop: 8 }}>
                 {(["full_name", "phone", "line1", "line2", "city", "state", "pincode"] as const).map((k) => (
