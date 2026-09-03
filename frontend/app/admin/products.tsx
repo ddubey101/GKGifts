@@ -312,7 +312,7 @@ function ProductForm({
               <View key={i} style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
                 {!!img && <Image source={{ uri: img }} style={{ width: 40, height: 40, borderRadius: 6, backgroundColor: colors.surfaceTertiary }} contentFit="cover" />}
                 <TextInput
-                  testID={`form-img-${i}`}\n                  value={img}\n                  onChangeText={(v) => setImage(i, v)}
+                  testID={`form-img-${i}`} value={img} onChangeText={(v) => setImage(i, v)}
                   placeholder="https://…"
                   placeholderTextColor={colors.onSurfaceMuted}
                   style={[s.input, { flex: 1 }]}
