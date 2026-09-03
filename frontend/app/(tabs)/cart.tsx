@@ -21,9 +21,7 @@ export default function Cart() {
   if (cart.items.length === 0) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-        <View style={[s.centerRow, { paddingHorizontal: hPad, backgroundColor: colors.surface }]}>
-        <View style={[s.headerInner, { maxWidth: contentMax }]}>
-          <Pressable testID="home-logo" onPress={() => router.push("/(tabs)/home")} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <Pressable testID="home-logo" onPress={() => router.push("/(tabs)/home")} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <RNImage
               source={require("../../assets/images/gk-logo.png")}
               style={{ width: 36, height: 36 }}
@@ -34,15 +32,6 @@ export default function Cart() {
               <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
             </View>
           </Pressable>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Pressable testID="header-notifications" onPress={() => router.push("/notifications")} style={s.headerBtn}>
-              <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
-            </Pressable>
-            <Pressable testID="header-wishlist" onPress={() => router.push("/wishlist")} style={s.headerBtn}>
-              <Ionicons name="heart-outline" size={20} color={colors.onSurface} />
-            </Pressable>
-          </View>
-        </View>
       </View>
         <View style={{ flex: 1, justifyContent: "center" }}>
           <EmptyState title="Your cart is empty" subtitle="Explore great deals to fill it up" cta="Start shopping" onCta={() => router.push("/(tabs)/home")} />
