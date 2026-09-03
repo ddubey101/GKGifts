@@ -32,7 +32,6 @@ export default function Cart() {
               <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
             </View>
           </Pressable>
-      </View>
         <View style={{ flex: 1, justifyContent: "center" }}>
           <EmptyState title="Your cart is empty" subtitle="Explore great deals to fill it up" cta="Start shopping" onCta={() => router.push("/(tabs)/home")} />
         </View>
