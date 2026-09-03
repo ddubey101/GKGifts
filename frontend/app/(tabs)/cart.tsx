@@ -21,7 +21,6 @@ export default function Cart() {
   if (cart.items.length === 0) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-        //<View style={s.header}><Text style={typography.h2}>Cart</Text></View>
         <View>
               <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
               <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
@@ -36,7 +35,6 @@ export default function Cart() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
       <View style={s.header}>
-        //<Text style={typography.h2}>Cart</Text>
         <View>
               <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
               <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
