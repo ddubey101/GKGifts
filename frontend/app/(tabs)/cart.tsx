@@ -21,10 +21,6 @@ export default function Cart() {
   if (cart.items.length === 0) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-        <View>
-              <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
-              <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
-        </View>
         <View style={s.header}><Text style={typography.h2}>Cart</Text></View>
         <View style={{ flex: 1, justifyContent: "center" }}>
           <EmptyState title="Your cart is empty" subtitle="Explore great deals to fill it up" cta="Start shopping" onCta={() => router.push("/(tabs)/home")} />
