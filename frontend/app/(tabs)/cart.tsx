@@ -14,6 +14,7 @@ export default function Cart() {
   const router = useRouter();
   const { user } = useAuth();
   const { cart, updateCart, refreshCart } = useCart();
+  const { width, cols, railCard, hPad, contentMax, bannerWidth } = useResponsiveCols();
 
   React.useEffect(() => { refreshCart(); }, [refreshCart]);
 
