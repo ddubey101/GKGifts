@@ -93,7 +93,7 @@ const s = StyleSheet.create({
   divider: { flexDirection: "row", alignItems: "center", marginVertical: spacing.xl, gap: spacing.md },
   line: { flex: 1, height: 1, backgroundColor: colors.border },
   or: { color: colors.onSurfaceMuted, fontSize: 12 },
-  google: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingVertical: 14, minHeight: 48 },
+  google: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingVertical: 12 },
   hint: { marginTop: spacing.xl, padding: spacing.md, backgroundColor: colors.brandSecondary, borderRadius: radius.md },
   hintTitle: { color: colors.onBrandSecondary, fontWeight: "500", marginBottom: 4 },
   hintText: { color: colors.onBrandSecondary, fontSize: 12 },
