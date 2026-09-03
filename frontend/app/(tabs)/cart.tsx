@@ -22,7 +22,7 @@ export default function Cart() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
         <Pressable testID="home-logo" onPress={() => router.push("/(tabs)/home")} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <RNImage
+            <Image
               source={require("../../assets/images/gk-logo.png")}
               style={{ width: 36, height: 36 }}
               resizeMode="contain"
@@ -45,7 +45,7 @@ export default function Cart() {
         <View style={[s.centerRow, { paddingHorizontal: hPad, backgroundColor: colors.surface }]}>
         <View style={[s.headerInner, { maxWidth: contentMax }]}>
           <Pressable testID="home-logo" onPress={() => router.push("/(tabs)/home")} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <RNImage
+            <Image
               source={require("../../assets/images/gk-logo.png")}
               style={{ width: 36, height: 36 }}
               resizeMode="contain"
