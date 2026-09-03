@@ -1,5 +1,5 @@
 // Admin Products management: list, search, create, edit, stock nudge, delete.
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList, KeyboardAvoidingView, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
@@ -189,9 +189,13 @@ export default function AdminProducts() {
                 )}
               </View>
               <View style={s.stockRow}>
-                <Pressable testID={`stock-dec-${item.product_id}`} onPress={() => nudgeStock(item, -1)} style={s.stockBtn}><Ionicons name="remove" size={14} color={colors.onSurface} /></Pressable>
+                <Pressable testID={`stock-dec-${item.product_id}`} onPress={() => nudgeStock(item, -1)} style={s.stockBtn}>
+                  <Ionicons name="remove" size={14} color={colors.onSurface} />
+                </Pressable>
                 <Text style={[s.stockValue, item.stock < 10 && { color: colors.error }]}>{item.stock}</Text>
-                <Pressable testID={`stock-inc-${item.product_id}`} onPress={() => nudgeStock(item, +1)} style={s.stockBtn}><Ionicons name="add" size={14} color={colors.onSurface} /></Pressable>
+                <Pressable testID={`stock-inc-${item.product_id}`} onPress={() => nudgeStock(item, +1)} style={s.stockBtn}>
+                  <Ionicons name="add" size={14} color={colors.onSurface} />
+                </Pressable>
                 <Text style={{ color: colors.onSurfaceMuted, fontSize: 11, marginLeft: 4 }}>in stock</Text>
               </View>
             </View>
@@ -282,9 +286,15 @@ function ProductForm({
             </ScrollView>
 
             <View style={{ flexDirection: "row", gap: 10 }}>
-              <View style={{ flex: 1 }}><Field label="Price (₹)" testID="form-price" value={String(value.price || "")} onChangeText={(v) => setField("price", v.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" /></View>
-              <View style={{ flex: 1 }}><Field label="MRP (₹)" testID="form-mrp" value={String(value.mrp || "")} onChangeText={(v) => setField("mrp", v.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" /></View>
-              <View style={{ flex: 1 }}><Field label="Stock" testID="form-stock" value={String(value.stock || "")} onChangeText={(v) => setField("stock", v.replace(/[^0-9]/g, ""))} keyboardType="number-pad" /></View>
+              <View style={{ flex: 1 }}>
+                <Field label="Price (₹)" testID="form-price" value={String(value.price || "")} onChangeText={(v) => setField("price", v.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Field label="MRP (₹)" testID="form-mrp" value={String(value.mrp || "")} onChangeText={(v) => setField("mrp", v.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Field label="Stock" testID="form-stock" value={String(value.stock || "")} onChangeText={(v) => setField("stock", v.replace(/[^0-9]/g, ""))} keyboardType="number-pad" />
+              </View>
             </View>
 
             <Field
