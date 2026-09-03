@@ -1,5 +1,5 @@
 // Admin Products management: list, search, create, edit, stock nudge, delete.
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList, KeyboardAvoidingView, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
@@ -196,10 +196,10 @@ export default function AdminProducts() {
               </View>
             </View>
             <View style={{ gap: 8 }}>
-              <Pressable testID={`edit-${item.product_id}`} onPress={() => openEdit(item)} style={[s.actionBtn, { backgroundColor: colors.brandSecondary }]}>
+              <Pressable testID={`edit-${item.product_id}`} onPress={() => openEdit(item)} style={[s.actionBtn, { backgroundColor: colors.brandSecondary }]}> 
                 <Ionicons name="pencil" size={14} color={colors.onBrandSecondary} />
               </Pressable>
-              <Pressable testID={`delete-${item.product_id}`} onPress={() => remove(item)} style={[s.actionBtn, { backgroundColor: "#FBEAEA" }]}>
+              <Pressable testID={`delete-${item.product_id}`} onPress={() => remove(item)} style={[s.actionBtn, { backgroundColor: "#FBEAEA" }]}> 
                 <Ionicons name="trash-outline" size={14} color={colors.error} />
               </Pressable>
             </View>
@@ -312,9 +312,7 @@ function ProductForm({
               <View key={i} style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
                 {!!img && <Image source={{ uri: img }} style={{ width: 40, height: 40, borderRadius: 6, backgroundColor: colors.surfaceTertiary }} contentFit="cover" />}
                 <TextInput
-                  testID={`form-img-${i}`}
-                  value={img}
-                  onChangeText={(v) => setImage(i, v)}
+                  testID={`form-img-${i}`}\n                  value={img}\n                  onChangeText={(v) => setImage(i, v)}
                   placeholder="https://…"
                   placeholderTextColor={colors.onSurfaceMuted}
                   style={[s.input, { flex: 1 }]}
