@@ -10,11 +10,12 @@ import { api } from "@/src/api";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { Button } from "@/src/ui";
 import { useCart } from "@/src/cart-store";
+import { Link } from 'expo-router';
 
 const SLOTS = ["Standard (3-5 days)", "Express (1-2 days)", "Weekend delivery"];
 const PAYMENTS = [
   { id: "cod", label: "Cash on Delivery", icon: "cash-outline" },
-  { id: "mock_card", label: "Card (mock)", icon: "card-outline" },
+  { id: "mock_card", label: "Pay via UPI/Cards/Netbanking/Wallet", href: "https://razorpay.me/@ankitavyas", icon: "card-outline" }
 ];
 
 export default function Checkout() {
@@ -143,7 +144,8 @@ export default function Checkout() {
                 <Text style={{ flex: 1, marginLeft: 10 }}>{p.label}</Text>
                 <Ionicons name={payment === p.id ? "checkmark-circle" : "ellipse-outline"} size={20} color={payment === p.id ? colors.brandPrimary : colors.onSurfaceMuted} />
               </Pressable>
-            ))}
+            )
+      )}
           </View>
 
           <View style={s.card}>

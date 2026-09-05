@@ -33,9 +33,9 @@ export default function Home() {
       const [b, c, f, feat, ne] = await Promise.all([
         api<any[]>("/banners", { auth: false }),
         api<any[]>("/categories", { auth: false }),
-        api<any[]>("/products?tag=flash_sale&limit=8", { auth: false }),
-        api<any[]>("/products?tag=featured&limit=10", { auth: false }),
-        api<any[]>("/products?tag=new&limit=10", { auth: false }),
+        api<any[]>("/products?tag=flash_sale&limit=80", { auth: false }),
+        api<any[]>("/products?tag=featured&limit=100", { auth: false }),
+        api<any[]>("/products?tag=new&limit=100", { auth: false }),
       ]);
       setBanners(b); setCats(c); setFlash(f); setFeatured(feat); setNewIn(ne);
     } catch (e) { console.log("home load", e); }
