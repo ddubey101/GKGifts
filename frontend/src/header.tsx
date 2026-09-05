@@ -29,12 +29,12 @@ export default function Header({ title, showBack }: { title?: string; showBack?:
         <View style={styles.center}>
           {title ? (
             <Text style={typography.h2}>{title}</Text>
-          ) : !showBack ? (
-            <View>
-              <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
-              <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
-            </View>
-          ) : null}
+          ) : (
+            <Pressable testID="header-search" onPress={() => router.push("/(tabs)/search")} style={styles.searchBar}>
+              <Ionicons name="search" size={16} color={colors.onSurfaceMuted} />
+              <Text style={{ marginLeft: 8, color: colors.onSurfaceMuted }}>Search for products, brands…</Text>
+            </Pressable>
+          )}
         </View>
 
         <View style={styles.right}>
@@ -53,9 +53,10 @@ export default function Header({ title, showBack }: { title?: string; showBack?:
 const styles = StyleSheet.create({
   container: { backgroundColor: colors.surface, alignItems: "center" },
   inner: { width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: spacing.md },
-  left: { width: 100, alignItems: "flex-start" },
+  left: { width: 100, alignItems: "flex-start", paddingLeft: 0 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   right: { width: 100, flexDirection: "row", justifyContent: "flex-end", gap: 8 },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
   btn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  searchBar: { backgroundColor: colors.surfaceSecondary, borderRadius: 999, paddingHorizontal: spacing.lg, paddingVertical: 8, flexDirection: "row", alignItems: "center" },
 });
