@@ -10,6 +10,7 @@ import { api } from "@/src/api";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { Button } from "@/src/ui";
 import { useCart } from "@/src/cart-store";
+import { Link } from 'expo-router';
 
 const SLOTS = ["Standard (3-5 days)", "Express (1-2 days)", "Weekend delivery"];
 const PAYMENTS = [
