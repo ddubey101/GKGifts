@@ -77,6 +77,7 @@ export default function Cart() {
         </View>
         <Button testID="checkout-cta" title="Proceed to Checkout" onPress={() => router.push("/checkout")} style={{ marginTop: 12 }} />
       </View>
+    </SafeAreaView>
   );
 }
 
