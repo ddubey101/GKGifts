@@ -8,13 +8,12 @@ import { colors, radius, spacing, typography } from "@/src/theme";
 import { useCart } from "@/src/cart-store";
 import { useAuth } from "@/src/auth";
 import { Button, EmptyState, Price } from "@/src/ui";
-import { useResponsiveCols } from "@/src/use-responsive-cols";
+import { AppHeader } from "@/src/app-header";
 
 export default function Cart() {
   const router = useRouter();
   const { user } = useAuth();
   const { cart, updateCart, refreshCart } = useCart();
-  const { width, cols, railCard, hPad, contentMax, bannerWidth } = useResponsiveCols();
 
   React.useEffect(() => { refreshCart(); }, [refreshCart]);
 
@@ -32,7 +31,8 @@ export default function Cart() {
   }
 
   return (
-    <AppHeader title="Cart" showNotifications={false} showWishlist={false} hPad={spacing.lg} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
+      <AppHeader title="Cart" showNotifications={false} showWishlist={false} hPad={spacing.lg} />
       <FlatList
         data={cart.items}
         keyExtractor={(i) => i.product_id + (i.variant || "")}
