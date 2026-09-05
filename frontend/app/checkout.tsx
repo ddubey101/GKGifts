@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { api } from "@/src/api";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { Button } from "@/src/ui";
@@ -81,6 +82,13 @@ export default function Checkout() {
     } finally { setBusy(false); }
   };
 
+  const handlePaymentPress = async (paymentId: string, href?: string) => {
+    setPayment(paymentId);
+    if (href) {
+      await WebBrowser.openBrowserAsync(href);
+    }
+  };
+
   const total = Math.max(0, cart.subtotal + cart.shipping + cart.tax - discount);
 
   return (
@@ -139,13 +147,18 @@ export default function Checkout() {
           <View style={s.card}>
             <Text style={s.cardTitle}>Payment method</Text>
             {PAYMENTS.map((p) => (
-              <Pressable key={p.id} testID={`payment-${p.id}`} onPress={() => setPayment(p.id)} style={[s.opt, payment === p.id && s.optActive]}>
+              <Pressable key={p.id} testID={`payment-${p.id}`} onPress={() => handlePaymentPress(p.id, p.href)} style={[s.opt, payment === p.id && s.optActive]}>
                 <Ionicons name={p.icon as any} size={20} color={colors.onSurface} />
-                <Text style={{ flex: 1, marginLeft: 10 }}>{p.label}</Text>
+                <View style={{ flex: 1, marginLeft: 10, justifyContent: "center" }}>
+                  {p.href ? (
+                    <Text style={{ color: colors.brandPrimary, textDecorationLine: "underline" }}>{p.label}</Text>
+                  ) : (
+                    <Text>{p.label}</Text>
+                  )}
+                </View>
                 <Ionicons name={payment === p.id ? "checkmark-circle" : "ellipse-outline"} size={20} color={payment === p.id ? colors.brandPrimary : colors.onSurfaceMuted} />
               </Pressable>
-            )
-      )}
+            ))}
           </View>
 
           <View style={s.card}>
