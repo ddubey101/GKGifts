@@ -14,7 +14,7 @@ import { useCart } from "@/src/cart-store";
 const SLOTS = ["Standard (3-5 days)", "Express (1-2 days)", "Weekend delivery"];
 const PAYMENTS = [
   { id: "cod", label: "Cash on Delivery", icon: "cash-outline" },
-  { id: "mock_card", label: "razorpay.me/@ankitavyas", icon: "card-outline" },
+  { id: "mock_card", label: "razorpay.me/@ankitavyas", href: "https://razorpay.me/@ankitavyas", icon: "card-outline" },
 ];
 
 export default function Checkout() {
