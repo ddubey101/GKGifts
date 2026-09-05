@@ -144,9 +144,7 @@ export default function Checkout() {
               </Pressable>
             )
             <Link href="https://razorpay.me/@ankitavyas" asChild>
-                <Pressable>
                   <Text>Pay via UPI/Cards/Netbanking/Wallet</Text>
-                </Pressable>
             </Link>
       )}
           </View>
