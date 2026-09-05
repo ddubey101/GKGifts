@@ -142,12 +142,13 @@ export default function Checkout() {
                 <Text style={{ flex: 1, marginLeft: 10 }}>{p.label}</Text>
                 <Ionicons name={payment === p.id ? "checkmark-circle" : "ellipse-outline"} size={20} color={payment === p.id ? colors.brandPrimary : colors.onSurfaceMuted} />
               </Pressable>
-              <Link href="https://razorpay.me/@ankitavyas" asChild>
+            )
+            <Link href="https://razorpay.me/@ankitavyas" asChild>
                 <Pressable>
                   <Text>Pay via UPI/Cards/Netbanking/Wallet</Text>
                 </Pressable>
-              </Link>
-            ))}
+            </Link>
+      )}
           </View>
 
           <View style={s.card}>
