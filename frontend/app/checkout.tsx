@@ -17,6 +17,18 @@ const PAYMENTS = [
   { id: "mock_card", label: "razorpay.me/@ankitavyas", icon: "card-outline" },
 ];
 
+export default function MyComponent() {
+  return (
+    <a 
+      href="https://razorpay.me/@ankitavyas" 
+      target="_blank" 
+      rel="noopener noreferrer"
+    >
+      Pay via UPI/Cards/Netbanking/Wallet
+    </a>
+  );
+}
+
 export default function Checkout() {
   const router = useRouter();
   const { cart, refreshCart } = useCart();
