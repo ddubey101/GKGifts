@@ -57,7 +57,7 @@ export default function Home() {
             />
             <View>
               <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
-              <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
+              <Text style={{ ...typography.h3, color: colors.onSurface }}>Guest</Text>
             </View>
           </Pressable>
           <View style={{ flexDirection: "row", gap: 8 }}>
@@ -185,7 +185,7 @@ const s = StyleSheet.create({
     alignItems: "center", paddingVertical: spacing.md,
   },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
-  searchBar: { marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  searchBar: { marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: spacing.md },
   banner: { height: 160, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surfaceTertiary },
   bannerScrim: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0 },
   bannerText: { position: "absolute", left: spacing.lg, bottom: spacing.lg, gap: 4 },

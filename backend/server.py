@@ -416,7 +416,9 @@ async def _get_cart(uid: str) -> dict:
 async def _hydrate_cart(cart: dict) -> dict:
     raw_items = cart.get("items", [])
     if not raw_items:
-        return {"items": [], "subtotal": 0.0, "shipping": 0, "tax": 0.0, "total": 0.0, "count": 0}
+        #uncomment below line to add tax in total amount
+        #return {"items": [], "subtotal": 0.0, "shipping": 0, "tax": 0.0, "total": 0.0, "count": 0}
+        return {"items": [], "subtotal": 0.0, "shipping": 0, "total": 0.0, "count": 0}
     ids = [it["product_id"] for it in raw_items]
     products = await db.products.find({"product_id": {"$in": ids}}, {"_id": 0}).to_list(len(ids))
     pmap = {p["product_id"]: p for p in products}
@@ -431,13 +433,16 @@ async def _hydrate_cart(cart: dict) -> dict:
         subtotal += line_total
         items.append({**it, "product": p, "line_total": round(line_total, 2)})
     shipping = 0 if subtotal >= 499 or subtotal == 0 else 49
-    tax = round(subtotal * 0.05, 2)
-    total = round(subtotal + shipping + tax, 2)
+    #uncomment below line to add tax in total amount
+    #tax = round(subtotal * 0.05, 2)
+    #total = round(subtotal + shipping + tax, 2)
+    total = round(subtotal + shipping, 2)
     return {
         "items": items,
         "subtotal": round(subtotal, 2),
         "shipping": shipping,
-        "tax": tax,
+        #uncomment below line to add tax in total amount
+        #"tax": tax,
         "total": total,
         "count": sum(i["quantity"] for i in items),
     }
@@ -580,7 +585,9 @@ async def checkout(body: CheckoutIn, user: dict = Depends(current_user)):
     if not addr:
         raise HTTPException(400, "Address not found")
     discount, coupon = await _apply_coupon(body.coupon_code or "", cart["subtotal"])
-    total = round(cart["subtotal"] + cart["shipping"] + cart["tax"] - discount, 2)
+    #uncomment below line to add tax in total amount
+    #total = round(cart["subtotal"] + cart["shipping"] + cart["tax"] - discount, 2)
+    total = round(cart["subtotal"] + cart["shipping"] - discount, 2)
     if total < 0:
         total = 0
     oid = new_id("ord")
@@ -601,7 +608,8 @@ async def checkout(body: CheckoutIn, user: dict = Depends(current_user)):
         "address": addr,
         "subtotal": cart["subtotal"],
         "shipping": cart["shipping"],
-        "tax": cart["tax"],
+        #uncomment below line to add tax in total amount
+        #"tax": cart["tax"],
         "discount": discount,
         "coupon_code": coupon["code"] if coupon else None,
         "total": total,

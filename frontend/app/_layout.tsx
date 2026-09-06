@@ -23,9 +23,9 @@ function Gate() {
   useEffect(() => {
     if (loading) return;
     const inAuth = segments[0] === "(auth)";
-    // Skip login - go directly to home
-    if (!inAuth) router.replace("/(tabs)/home");
-  }, [loading, segments, router]);
+   if (!user && !inAuth) router.replace("/(auth)/login");
+    else if (user && inAuth) router.replace("/(tabs)/home");
+  }, [user, loading, segments, router]);
 
   return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#F9F9F8" } }} />;
 }
