@@ -66,9 +66,9 @@ export default function Cart() {
           <Text style={{ color: colors.onSurfaceMuted }}>Shipping</Text>
           <Text>{cart.shipping === 0 ? "Free" : `₹${cart.shipping}`}</Text>
         </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        <View style={/*{ flexDirection: "row", justifyContent: "space-between" }}>
           <Text style={{ color: colors.onSurfaceMuted }}>Tax (5%)</Text>
-          <Text>₹{cart.tax}</Text>
+          <Text>₹{cart.tax*/}</Text>
         </View>
         <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 6 }} />
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
