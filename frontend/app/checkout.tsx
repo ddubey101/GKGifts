@@ -88,8 +88,9 @@ export default function Checkout() {
       await WebBrowser.openBrowserAsync(href);
     }
   };
-
-  const total = Math.max(0, cart.subtotal + cart.shipping + cart.tax - discount);
+  //uncomment below line to add tax in total amount
+  //const total = Math.max(0, cart.subtotal + cart.shipping + cart.tax - discount);
+  const total = Math.max(0, cart.subtotal + cart.shipping - discount);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top", "bottom"]}>
@@ -174,7 +175,11 @@ export default function Checkout() {
             <Text style={s.cardTitle}>Summary</Text>
             <SummaryRow label="Subtotal" value={`₹${cart.subtotal.toLocaleString("en-IN")}`} />
             <SummaryRow label="Shipping" value={cart.shipping === 0 ? "Free" : `₹${cart.shipping}`} />
-            <SummaryRow label="Tax" value={`₹${cart.tax}`} />
+            
+            {//uncomment below line and curly braces to add tax in total amount
+            //<SummaryRow label="Tax" value={`₹${cart.tax}`} />
+            }
+            
             {discount > 0 && <SummaryRow label="Discount" value={`- ₹${discount}`} color={colors.success} />}
             <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 6 }} />
             <SummaryRow label="Total" value={`₹${total.toLocaleString("en-IN")}`} bold />
