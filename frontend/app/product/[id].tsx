@@ -69,7 +69,7 @@ export default function ProductDetail() {
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={(e) => setGi(Math.round(e.nativeEvent.contentOffset.x / SCREEN_W))}
             keyExtractor={(_, i) => String(i)}
-            renderItem={({ item }) => <Image source={{ uri: item }} style={{ width: SCREEN_W/2, height: SCREEN_W/4 }} contentFit="cover" />}
+            renderItem={({ item }) => <Image source={{ uri: item }} style={{ width: SCREEN_W/2, height: SCREEN_W/4 }} contentFit="none" />}
           />
           <View style={s.dots}>
             {(p.images || []).map((_: any, i: number) => <View key={i} style={[s.dot, gi === i && s.dotActive]} />)}
