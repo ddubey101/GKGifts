@@ -480,6 +480,12 @@ async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
 async def cart_update(body: CartItemIn, user: dict = Depends(current_user)):
     cart = await _get_cart(user["user_id"])
     items = [i for i in cart["items"] if i["product_id"] != body.product_id]
+    # check inventory stock before adding quantity
+    product = await db.products.find_one({"product_id": body.product_id})
+    if not product:
+        raise HTTPException(404, "Product not found")
+    if product.get("inventory", 0) < body.quantity:
+        raise HTTPException(400, "Insufficient inventory")
     if body.quantity > 0:
         items.append(body.model_dump())
     await db.carts.update_one(
