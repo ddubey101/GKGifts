@@ -77,6 +77,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       method: "POST",
       body: JSON.stringify({ product_id, quantity, variant }),
     });
+    // check if HTTP 400 error is returned from /cart/add due to insufficient inventory, and handle it appropriately
+    if (c === null) {
+      return;
+    }
     setCart(c);
   };
   const updateCart = async (product_id: string, quantity: number, variant: string | null = null) => {
