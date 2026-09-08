@@ -459,6 +459,12 @@ async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
     items = cart["items"]
     for it in items:
         if it["product_id"] == body.product_id and it.get("variant") == body.variant:
+            # check inventory stock before adding quantity
+            product = await db.products.find_one({"product_id": body.product_id})
+            if not product:
+                raise HTTPException(404, "Product not found")
+            if product.get("inventory", 0) < body.quantity:
+                raise HTTPException(400, "Insufficient inventory")
             it["quantity"] += body.quantity
             break
     else:
