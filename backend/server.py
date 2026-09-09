@@ -1010,7 +1010,7 @@ app.mount(
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=[ "https://gkgifts.store", "https://www.gkgifts.store", "https://scalable-marketplace-4.preview.emergentagent.com", "http://localhost:3000", ],
+    allow_origins=[ "https://gkgifts.store", "https://www.gkgifts.store", "https://gkgifts-api-nilg.onrender.com", "https://scalable-marketplace-4.preview.emergentagent.com", "http://localhost:3000", ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
