@@ -462,7 +462,7 @@ async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
             # check inventory stock before adding quantity
             product = await db.products.find_one({"product_id": body.product_id})
             if not product:
-                raise HTTPException(404, "Product not found")
+                 raise HTTPException(404, "Product not found")
             if product.get("inventory", 0) < body.quantity:
                 raise HTTPException(400, "Insufficient inventory")
             it["quantity"] += body.quantity
