@@ -463,11 +463,19 @@ async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
             product = await db.products.find_one({"product_id": body.product_id})
             if not product:
                  raise HTTPException(404, "Product not found")
-            if product.get("inventory", 0) < body.quantity:
+            # Check total quantity after adding
+            total_qty = it["quantity"] + body.quantity
+            if product.get("stock", 0) < total_qty:
                 raise HTTPException(400, "Insufficient inventory")
             it["quantity"] += body.quantity
             break
     else:
+        # New item to cart
+        product = await db.products.find_one({"product_id": body.product_id})
+        if not product:
+            raise HTTPException(404, "Product not found")
+        if product.get("stock", 0) < body.quantity:
+            raise HTTPException(400, "Insufficient inventory")
         items.append(body.model_dump())
     await db.carts.update_one(
         {"user_id": user["user_id"]},
@@ -484,7 +492,9 @@ async def cart_update(body: CartItemIn, user: dict = Depends(current_user)):
     product = await db.products.find_one({"product_id": body.product_id})
     if not product:
         raise HTTPException(404, "Product not found")
-    if product.get("inventory", 0) < body.quantity:
+    # Check total quantity after adding
+    total_qty = it["quantity"] + body.quantity
+    if product.get("stock", 0) < total_qty:
         raise HTTPException(400, "Insufficient inventory")
     if body.quantity > 0:
         items.append(body.model_dump())
