@@ -17,6 +17,7 @@ const isWeb = Platform.OS === "web";
 
 
 function Gate() {
+  const router = useRouter();
   router.replace("/(tabs)/home");
   return (
     <Stack
