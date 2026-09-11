@@ -16,18 +16,14 @@ SplashScreen.preventAutoHideAsync();
 const isWeb = Platform.OS === "web";
 
 function Gate() {
-  const { user, loading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading) return;
-    const inAuth = segments[0] === "(auth)";
-   if (!user && !inAuth) router.replace("/(auth)/login");
-    else if (user && inAuth) router.replace("/(tabs)/home");
-  }, [user, loading, segments, router]);
-
-  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#F9F9F8" } }} />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: "#F9F9F8" },
+      }}
+    />
+  );
 }
 
 export default function RootLayout() {
