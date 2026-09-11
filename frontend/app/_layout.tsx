@@ -15,7 +15,10 @@ SplashScreen.preventAutoHideAsync();
 
 const isWeb = Platform.OS === "web";
 
+
 function Gate() {
+  if (loading) return;
+  router.replace("/(tabs)/home");
   return (
     <Stack
       screenOptions={{
