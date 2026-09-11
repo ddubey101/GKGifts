@@ -17,11 +17,7 @@ export default function Index() {
   }, []);
 
   const hardReload = () => {
-    if (Platform.OS === "web" && typeof window !== "undefined") {
-      window.location.href = "/";
-    } else {
-      router.replace("/(auth)/login");
-    }
+    window.location.href = "/";
   };
 
   return (
