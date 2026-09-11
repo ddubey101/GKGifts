@@ -17,7 +17,7 @@ export default function Cart() {
 
   React.useEffect(() => { refreshCart(); }, [refreshCart]);
 
-  if (!user) return <SafeAreaView style={{ flex: 1 }}><EmptyState title="Sign in to view cart" cta="Login" onCta={() => router.push("/(auth)/login")} /></SafeAreaView>;
+  //if (!user) return <SafeAreaView style={{ flex: 1 }}><EmptyState title="Sign in to view cart" cta="Login" onCta={() => router.push("/(auth)/login")} /></SafeAreaView>;
 
   if (cart.items.length === 0) {
     return (
