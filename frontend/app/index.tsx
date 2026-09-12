@@ -17,7 +17,9 @@ export default function Index() {
   }, []);
 
   const hardReload = () => {
-    window.location.href = "/";
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.location.href = "/";
+    }
   };
 
   return (
