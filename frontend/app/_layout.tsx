@@ -41,13 +41,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <BottomSheetModalProvider>
-          <AuthProvider>
-            <CartProvider>
-              <View style={styles.page}>
-                <Gate />
-              </View>
-            </CartProvider>
-          </AuthProvider>
+          <CartProvider>
+            <View style={styles.page}>
+              <Gate />
+            </View>
+          </CartProvider>
         </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
