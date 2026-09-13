@@ -263,6 +263,30 @@ async def login(body: LoginIn):
     return {"token": token, "user": user}
 
 
+@api.post("/admin/auth/login")
+async def admin_login(body: LoginIn):
+    """Authenticate staff through a dedicated endpoint.
+
+    Credentials are checked before the role to avoid revealing whether an
+    email belongs to an administrator.
+    """
+    user = await db.users.find_one({"email": body.email.lower()})
+    if not user or not user.get("password_hash") or not check_pw(body.password, user["password_hash"]):
+        raise HTTPException(401, "Invalid admin email or password")
+    if user.get("role") != "admin":
+        raise HTTPException(403, "Admin access required")
+    token = make_jwt(user["user_id"])
+    _strip(user)
+    user.pop("password_hash", None)
+    return {"token": token, "user": user}
+
+
+@api.get("/admin/auth/me")
+async def admin_me(user: dict = Depends(require_admin)):
+    user.pop("password_hash", None)
+    return user
+
+
 @api.post("/auth/google")
 async def google_login(body: GoogleSessionIn):
     """Frontend already exchanged session_id for session_token via Emergent.

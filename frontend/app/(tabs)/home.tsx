@@ -60,14 +60,25 @@ export default function Home() {
               <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
             </View>
           </Pressable>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Pressable testID="header-notifications" onPress={() => router.push("/notifications")} style={s.headerBtn}>
-              <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
+          {user ? (
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <Pressable testID="header-notifications" onPress={() => router.push("/notifications")} style={s.headerBtn}>
+                <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
+              </Pressable>
+              <Pressable testID="header-wishlist" onPress={() => router.push("/wishlist")} style={s.headerBtn}>
+                <Ionicons name="heart-outline" size={20} color={colors.onSurface} />
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              testID="header-sign-in"
+              onPress={() => router.push("/(auth)/login")}
+              style={s.signInBtn}
+            >
+              <Ionicons name="person-outline" size={16} color={colors.brandPrimary} />
+              <Text style={s.signInText}>Sign in</Text>
             </Pressable>
-            <Pressable testID="header-wishlist" onPress={() => router.push("/wishlist")} style={s.headerBtn}>
-              <Ionicons name="heart-outline" size={20} color={colors.onSurface} />
-            </Pressable>
-          </View>
+          )}
         </View>
       </View>
 
@@ -185,6 +196,8 @@ const s = StyleSheet.create({
     alignItems: "center", paddingVertical: spacing.md,
   },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
+  signInBtn: { height: 40, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.brandPrimary },
+  signInText: { color: colors.brandPrimary, fontWeight: "500" },
   searchBar: { marginBottom: spacing.lg, backgroundColor: colors.surfaceSecondary, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: spacing.sm },
   banner: { height: 160, borderRadius: radius.lg, overflow: "hidden", backgroundColor: colors.surfaceTertiary },
   bannerScrim: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0 },

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@/src/ui";
 import { colors, radius, spacing, typography } from "@/src/theme";
@@ -9,6 +9,8 @@ import { useAuth } from "@/src/auth";
 
 export default function Register() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ redirect?: string }>();
+  const redirectTo = typeof params.redirect === "string" && params.redirect.startsWith("/") ? params.redirect : null;
   const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,7 +20,10 @@ export default function Register() {
 
   const submit = async () => {
     setBusy(true); setErr("");
-    try { await register(name.trim(), email.trim(), password); }
+    try {
+      await register(name.trim(), email.trim(), password);
+      router.replace((redirectTo || "/(tabs)/home") as any);
+    }
     catch (e: any) { setErr(e?.message || "Registration failed"); }
     finally { setBusy(false); }
   };

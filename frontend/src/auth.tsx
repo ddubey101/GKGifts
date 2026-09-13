@@ -17,6 +17,7 @@ type Ctx = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  adminLogin: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   googleLogin: () => Promise<void>;
   logout: () => Promise<void>;
@@ -105,6 +106,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(r.user);
   };
 
+  // Separate admin endpoint: rejects non-admin accounts server-side.
+  const adminLogin = async (email: string, password: string) => {
+    const r = await api<{ token: string; user: User }>("/admin/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+      auth: false,
+    });
+    await setToken(r.token);
+    setUser(r.user);
+  };
+
   const register = async (name: string, email: string, password: string) => {
     const r = await api<{ token: string; user: User }>("/auth/register", {
       method: "POST",
@@ -141,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthCtx.Provider value={{ user, loading, login, register, googleLogin, logout, refresh }}>
+    <AuthCtx.Provider value={{ user, loading, login, adminLogin, register, googleLogin, logout, refresh }}>
       {children}
     </AuthCtx.Provider>
   );
