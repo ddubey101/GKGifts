@@ -6,13 +6,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "@/src/ui";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { useAuth } from "@/src/auth";
 
 export default function Login() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ redirect?: string }>();
+  const redirectTo = typeof params.redirect === "string" && params.redirect.startsWith("/") ? params.redirect : null;
   const { login, googleLogin } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +23,10 @@ export default function Login() {
 
   const submit = async () => {
     setBusy(true); setErr("");
-    try { await login(email.trim(), password); }
+    try {
+      await login(email.trim(), password);
+      if (redirectTo) router.replace(redirectTo as any);
+    }
     catch (e: any) { setErr(e?.message || "Login failed"); }
     finally { setBusy(false); }
   };
@@ -43,7 +48,9 @@ export default function Login() {
               style={s.logo}
               resizeMode="contain"
             />
-            <Text style={{ color: colors.onSurfaceMuted, marginTop: spacing.md }}>Sign in to continue shopping</Text>
+            <Text style={{ color: colors.onSurfaceMuted, marginTop: spacing.md }}>
+              {redirectTo === "/checkout" ? "Sign in to complete your order" : "Sign in to continue shopping"}
+            </Text>
           </View>
 
           <Text style={s.label}>Email</Text>
@@ -71,12 +78,19 @@ export default function Login() {
 
           <Pressable
             testID="go-register-link"
-            onPress={() => router.push("/(auth)/register")}
+            onPress={() => router.push(redirectTo ? (`/(auth)/register?redirect=${encodeURIComponent(redirectTo)}` as any) : "/(auth)/register")}
             style={{ marginTop: spacing.xl, alignItems: "center" }}
           >
             <Text style={{ color: colors.onSurfaceMuted }}>
               New here? <Text style={{ color: colors.brandPrimary, fontWeight: "500" }}>Create account</Text>
             </Text>
+          </Pressable>
+          <Pressable
+            testID="keep-browsing-link"
+            onPress={() => router.replace("/(tabs)/home")}
+            style={{ marginTop: spacing.md, alignItems: "center" }}
+          >
+            <Text style={{ color: colors.onSurfaceMuted }}>Keep browsing</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

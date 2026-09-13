@@ -15,6 +15,11 @@ SplashScreen.preventAutoHideAsync();
 
 const isWeb = Platform.OS === "web";
 
+// Screens that still require a signed-in shopper. Everything else —
+// home, search, categories, product pages, the cart — is open to guests.
+const PROTECTED_TOP: string[] = ["checkout", "addresses", "wishlist", "notifications"];
+const PROTECTED_TAB: string[] = ["orders"];
+
 function Gate() {
   const { user, loading } = useAuth();
   const segments = useSegments();
@@ -22,9 +27,30 @@ function Gate() {
 
   useEffect(() => {
     if (loading) return;
-    const inAuth = segments[0] === "(auth)";
-   if (!user && !inAuth) router.replace("/(auth)/login");
-    else if (user && inAuth) router.replace("/(tabs)/home");
+    const first = segments[0];
+    const second = segments[1];
+    const inAuth = first === "(auth)";
+    const isAdminArea = first === "admin";
+    const needsAuth =
+      PROTECTED_TOP.includes(first as string) ||
+      (first === "(tabs)" && PROTECTED_TAB.includes(second as string));
+
+    if (isAdminArea) {
+      if (!user) router.replace("/(auth)/admin-login");
+      else if (user.role !== "admin") router.replace("/(tabs)/home");
+      return;
+    }
+
+    if (!user && needsAuth) {
+      const next = "/" + segments.join("/");
+      router.replace(`/(auth)/login?redirect=${encodeURIComponent(next)}`);
+      return;
+    }
+
+    if (user && inAuth) {
+      if (second === "admin-login") router.replace(user.role === "admin" ? "/admin" : "/(tabs)/home");
+      else router.replace("/(tabs)/home");
+    }
   }, [user, loading, segments, router]);
 
   return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#F9F9F8" } }} />;

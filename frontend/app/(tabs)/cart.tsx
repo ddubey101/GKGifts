@@ -6,18 +6,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { useCart } from "@/src/cart-store";
-import { useAuth } from "@/src/auth";
 import { Button, EmptyState, Price } from "@/src/ui";
 import { AppHeader } from "@/src/app-header";
 
 export default function Cart() {
   const router = useRouter();
-  const { user } = useAuth();
-  const { cart, updateCart, refreshCart } = useCart();
+  const { cart, updateCart, refreshCart, isGuestCart } = useCart();
 
   React.useEffect(() => { refreshCart(); }, [refreshCart]);
-
-  if (!user) return <SafeAreaView style={{ flex: 1 }}><EmptyState title="Sign in to view cart" cta="Login" onCta={() => router.push("/(auth)/login")} /></SafeAreaView>;
 
   if (cart.items.length === 0) {
     return (
@@ -77,7 +73,12 @@ export default function Cart() {
           <Text style={{ fontWeight: "500", fontSize: 16 }}>Total</Text>
           <Text style={{ fontWeight: "500", fontSize: 16 }}>₹{cart.total.toLocaleString("en-IN")}</Text>
         </View>
-        <Button testID="checkout-cta" title="Proceed to Checkout" onPress={() => router.push("/checkout")} style={{ marginTop: 12 }} />
+        <Button
+          testID="checkout-cta"
+          title={isGuestCart ? "Sign in to Checkout" : "Proceed to Checkout"}
+          onPress={() => router.push(isGuestCart ? "/(auth)/login?redirect=%2Fcheckout" : "/checkout")}
+          style={{ marginTop: 12 }}
+        />
       </View>
     </SafeAreaView>
   );
