@@ -21,7 +21,6 @@ from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, Upload
 from fastapi.routing import APIRouter
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import UpdateOne
 from pydantic import BaseModel, EmailStr, Field
 from starlette.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
@@ -477,14 +476,40 @@ async def get_cart(user: dict = Depends(current_user)):
     return await _hydrate_cart(await _get_cart(user["user_id"]))
 
 
+async def _require_stock(product_id: str, requested: int) -> dict:
+    product = await db.products.find_one({"product_id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(404, "Product not found")
+    available = max(0, int(product.get("stock", 0)))
+    if requested > available:
+        if available == 0:
+            raise HTTPException(409, "This product is out of stock")
+        raise HTTPException(409, f"Only {available} item(s) available")
+    return product
+
+
 @api.post("/cart/add")
 async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
+    if body.quantity <= 0:
+        raise HTTPException(400, "Quantity must be greater than zero")
     cart = await _get_cart(user["user_id"])
     items = cart["items"]
-    for it in items:
-        if it["product_id"] == body.product_id and it.get("variant") == body.variant:
-            it["quantity"] += body.quantity
-            break
+    existing = next(
+        (
+            item for item in items
+            if item["product_id"] == body.product_id
+            and item.get("variant") == body.variant
+        ),
+        None,
+    )
+    requested = sum(
+        int(item.get("quantity", 0))
+        for item in items
+        if item["product_id"] == body.product_id
+    ) + body.quantity
+    await _require_stock(body.product_id, requested)
+    if existing:
+        existing["quantity"] = int(existing.get("quantity", 0)) + body.quantity
     else:
         items.append(body.model_dump())
     await db.carts.update_one(
@@ -496,15 +521,54 @@ async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
 
 @api.post("/cart/update")
 async def cart_update(body: CartItemIn, user: dict = Depends(current_user)):
+    if body.quantity < 0:
+        raise HTTPException(400, "Quantity cannot be negative")
     cart = await _get_cart(user["user_id"])
-    items = [i for i in cart["items"] if i["product_id"] != body.product_id]
+    items = [
+        item for item in cart["items"]
+        if not (
+            item["product_id"] == body.product_id
+            and item.get("variant") == body.variant
+        )
+    ]
     if body.quantity > 0:
+        requested = body.quantity + sum(
+            int(item.get("quantity", 0))
+            for item in items
+            if item["product_id"] == body.product_id
+        )
+        await _require_stock(body.product_id, requested)
         items.append(body.model_dump())
     await db.carts.update_one(
         {"user_id": user["user_id"]},
         {"$set": {"items": items, "updated_at": now_utc()}},
     )
     return await _hydrate_cart({"items": items})
+
+
+@api.post("/products/{product_id}/notify")
+async def request_restock_notification(
+    product_id: str, user: dict = Depends(current_user)
+):
+    product = await db.products.find_one({"product_id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(404, "Product not found")
+    if int(product.get("stock", 0)) > 0:
+        raise HTTPException(409, "This product is already available")
+    await db.restock_notifications.update_one(
+        {"user_id": user["user_id"], "product_id": product_id},
+        {
+            "$set": {"active": True, "updated_at": now_utc()},
+            "$setOnInsert": {
+                "request_id": new_id("rst"),
+                "user_id": user["user_id"],
+                "product_id": product_id,
+                "created_at": now_utc(),
+            },
+        },
+        upsert=True,
+    )
+    return {"ok": True, "message": "We will notify you when this item is back"}
 
 
 @api.post("/cart/clear")
@@ -645,28 +709,49 @@ async def checkout(body: CheckoutIn, user: dict = Depends(current_user)):
         ],
         "created_at": now_utc(),
     }
-    await db.orders.insert_one(order)
-    # decrement stock (batched)
-    bulk_ops = [
-        UpdateOne({"product_id": i["product_id"]}, {"$inc": {"stock": -i["quantity"]}})
-        for i in cart["items"]
-    ]
-    if bulk_ops:
-        await db.products.bulk_write(bulk_ops)
-    # in-app notification
-    await db.notifications.insert_one(
-        {
-            "notif_id": new_id("ntf"),
-            "user_id": user["user_id"],
-            "title": "Order confirmed",
-            "body": f"Your order {oid[-6:].upper()} has been placed. Total ₹{total:.0f}.",
-            "kind": "order",
-            "read": False,
-            "created_at": now_utc(),
-        }
-    )
-    # clear cart
-    await db.carts.update_one({"user_id": user["user_id"]}, {"$set": {"items": []}})
+    # Reserve each line against the latest inventory. Conditional updates keep
+    # concurrent checkouts from taking stock below zero.
+    reserved = []
+    for item in cart["items"]:
+        result = await db.products.update_one(
+            {"product_id": item["product_id"], "stock": {"$gte": item["quantity"]}},
+            {"$inc": {"stock": -item["quantity"]}},
+        )
+        if result.modified_count != 1:
+            for previous in reserved:
+                await db.products.update_one(
+                    {"product_id": previous["product_id"]},
+                    {"$inc": {"stock": previous["quantity"]}},
+                )
+            latest = await db.products.find_one(
+                {"product_id": item["product_id"]}, {"_id": 0, "stock": 1}
+            )
+            available = max(0, int((latest or {}).get("stock", 0)))
+            raise HTTPException(409, f"Only {available} item(s) available")
+        reserved.append(item)
+
+    try:
+        await db.orders.insert_one(order)
+        await db.notifications.insert_one(
+            {
+                "notif_id": new_id("ntf"),
+                "user_id": user["user_id"],
+                "title": "Order confirmed",
+                "body": f"Your order {oid[-6:].upper()} has been placed. Total ₹{total:.0f}.",
+                "kind": "order",
+                "read": False,
+                "created_at": now_utc(),
+            }
+        )
+        await db.carts.update_one({"user_id": user["user_id"]}, {"$set": {"items": []}})
+    except Exception:
+        await db.orders.delete_one({"order_id": oid})
+        for item in reserved:
+            await db.products.update_one(
+                {"product_id": item["product_id"]},
+                {"$inc": {"stock": item["quantity"]}},
+            )
+        raise
     return _strip(order)
 
 
@@ -847,6 +932,32 @@ async def admin_product_list(
     return await db.products.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
 
 
+async def _notify_restock_subscribers(product_id: str, product_name: str) -> None:
+    requests = await db.restock_notifications.find(
+        {"product_id": product_id, "active": True}, {"_id": 0, "user_id": 1}
+    ).to_list(10000)
+    if not requests:
+        return
+    created_at = now_utc()
+    await db.notifications.insert_many([
+        {
+            "notif_id": new_id("ntf"),
+            "user_id": request["user_id"],
+            "title": "Back in stock",
+            "body": f"{product_name} is available again.",
+            "kind": "restock",
+            "product_id": product_id,
+            "read": False,
+            "created_at": created_at,
+        }
+        for request in requests
+    ])
+    await db.restock_notifications.update_many(
+        {"product_id": product_id, "active": True},
+        {"$set": {"active": False, "notified_at": created_at}},
+    )
+
+
 @api.patch("/admin/products/{product_id}")
 async def admin_product_update(
     product_id: str, body: ProductPatchIn, _: dict = Depends(require_admin)
@@ -854,11 +965,15 @@ async def admin_product_update(
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(400, "No fields to update")
-    updates["updated_at"] = now_utc()
-    r = await db.products.update_one({"product_id": product_id}, {"$set": updates})
-    if r.matched_count == 0:
+    previous = await db.products.find_one({"product_id": product_id}, {"_id": 0})
+    if not previous:
         raise HTTPException(404, "Product not found")
-    return await db.products.find_one({"product_id": product_id}, {"_id": 0})
+    updates["updated_at"] = now_utc()
+    await db.products.update_one({"product_id": product_id}, {"$set": updates})
+    updated = await db.products.find_one({"product_id": product_id}, {"_id": 0})
+    if updated and int(previous.get("stock", 0)) <= 0 < int(updated.get("stock", 0)):
+        await _notify_restock_subscribers(product_id, updated.get("name", "An item"))
+    return updated
 
 
 @api.patch("/admin/products/{product_id}/stock")
@@ -880,6 +995,8 @@ async def admin_product_stock(
         {"product_id": product_id},
         {"$set": {"stock": new_stock, "updated_at": now_utc()}},
     )
+    if int(p.get("stock", 0)) <= 0 < new_stock:
+        await _notify_restock_subscribers(product_id, p.get("name", "An item"))
     return {"product_id": product_id, "stock": new_stock}
 
 
@@ -959,6 +1076,9 @@ async def startup():
     await db.products.create_index("product_id", unique=True)
     await db.categories.create_index("category_id", unique=True)
     await db.orders.create_index("order_id", unique=True)
+    await db.restock_notifications.create_index(
+        [("user_id", 1), ("product_id", 1)], unique=True
+    )
 
     if await db.categories.count_documents({}) == 0:
         await db.categories.insert_many([dict(c) for c in DEMO_CATEGORIES])

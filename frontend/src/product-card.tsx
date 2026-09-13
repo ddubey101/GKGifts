@@ -8,18 +8,27 @@ import { useRouter } from "expo-router";
 import { colors, radius, shadow, spacing } from "./theme";
 import { Price, Rating } from "./ui";
 import { useCart } from "./cart-store";
+import { useAuth } from "./auth";
+import { api } from "./api";
 
 export function ProductCard({ product, width }: { product: any; width?: number }) {
   const router = useRouter();
   const { toggleWishlist, isWished, addToCart, updateCart, cart } = useCart();
+  const { user } = useAuth();
   const wished = isWished(product.product_id);
+  const stock = Math.max(0, Number(product.stock) || 0);
+  const outOfStock = stock === 0;
 
   const inCart = cart.items.find(
     (i) => i.product_id === product.product_id && !i.variant,
   );
   const qty = inCart?.quantity ?? 0;
+  const productQty = cart.items
+    .filter((i) => i.product_id === product.product_id)
+    .reduce((total, i) => total + i.quantity, 0);
 
   const [busy, setBusy] = useState(false);
+  const [notifySaved, setNotifySaved] = useState(false);
   const stop = (e: any) => e?.stopPropagation?.();
 
   const runAdd = async (e: any) => {
@@ -31,6 +40,23 @@ export function ProductCard({ product, width }: { product: any; width?: number }
       Haptics.selectionAsync().catch(() => {});
     } catch {
       // ignore; card still opens PDP on tap
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const requestNotify = async (e: any) => {
+    stop(e);
+    if (busy || notifySaved) return;
+    if (!user) {
+      router.push(`/(auth)/login?redirect=${encodeURIComponent(`/product/${product.product_id}`)}`);
+      return;
+    }
+    setBusy(true);
+    try {
+      await api(`/products/${product.product_id}/notify`, { method: "POST" });
+      setNotifySaved(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } finally {
       setBusy(false);
     }
@@ -79,18 +105,18 @@ export function ProductCard({ product, width }: { product: any; width?: number }
 
           {qty === 0 ? (
             <Pressable
-              testID={`card-add-to-cart-${product.product_id}`}
-              onPress={runAdd}
-              disabled={busy}
-              style={styles.addBtn}
+              testID={outOfStock ? `card-notify-${product.product_id}` : `card-add-to-cart-${product.product_id}`}
+              onPress={outOfStock ? requestNotify : runAdd}
+              disabled={busy || notifySaved}
+              style={[styles.addBtn, outOfStock && styles.notifyBtn]}
               hitSlop={6}
             >
               {busy ? (
-                <ActivityIndicator size="small" color={colors.onBrand} />
+                <ActivityIndicator size="small" color={outOfStock ? colors.brandPrimary : colors.onBrand} />
               ) : (
                 <>
-                  <Ionicons name="bag-add" size={12} color={colors.onBrand} />
-                  <Text style={styles.addBtnText}>Add</Text>
+                  <Ionicons name={outOfStock ? "notifications-outline" : "bag-add"} size={12} color={outOfStock ? colors.brandPrimary : colors.onBrand} />
+                  <Text style={[styles.addBtnText, outOfStock && styles.notifyBtnText]}>{outOfStock ? (notifySaved ? "Saved" : "Notify me") : "Add"}</Text>
                 </>
               )}
             </Pressable>
@@ -113,8 +139,8 @@ export function ProductCard({ product, width }: { product: any; width?: number }
               <Pressable
                 testID={`card-qty-inc-${product.product_id}`}
                 onPress={(e) => bump(e, +1)}
-                disabled={busy}
-                style={styles.stepBtn}
+                disabled={busy || productQty >= stock}
+                style={[styles.stepBtn, productQty >= stock && styles.stepBtnDisabled]}
                 hitSlop={6}
               >
                 <Ionicons name="add" size={14} color={colors.onBrand} />
@@ -169,6 +195,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   addBtnText: { color: colors.onBrand, fontSize: 11, fontWeight: "600" },
+  notifyBtn: { backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.brandPrimary, minWidth: 82 },
+  notifyBtnText: { color: colors.brandPrimary },
   stepper: {
     flexDirection: "row",
     alignItems: "center",
@@ -185,6 +213,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  stepBtnDisabled: { opacity: 0.45 },
   stepQty: {
     color: colors.onBrand,
     fontSize: 12,
