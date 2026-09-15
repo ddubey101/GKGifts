@@ -18,6 +18,7 @@ import httpx
 import jwt as pyjwt
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, Request, Response, UploadFile
+from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRouter
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -55,6 +56,13 @@ client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
 app = FastAPI(title="Aura Commerce API")
+
+
+@app.get("/ping", response_class=PlainTextResponse)
+def ping():
+    return "pong"
+
+
 api = APIRouter(prefix="/api")
 
 logger = logging.getLogger("aura")
