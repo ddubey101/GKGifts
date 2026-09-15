@@ -173,9 +173,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = async (product_id: string, quantity = 1, variant: string | null = null) => {
     if (!user) {
-      const lines = await readGuest();
+      const [lines, product] = await Promise.all([
+        readGuest(),
+        api<any>(`/products/${product_id}`, { auth: false }),
+      ]);
       const hit = lines.find((l) => l.product_id === product_id && (l.variant ?? null) === variant);
-      if (hit) hit.quantity += quantity;
+      const requested = lines
+        .filter((l) => l.product_id === product_id)
+        .reduce((total, l) => total + l.quantity, 0) + quantity;
+      const available = Math.max(0, Number(product.stock) || 0);
+      if (requested > available) {
+        throw new Error(available === 0 ? "This product is out of stock" : `Only ${available} item(s) available`);
+      }
+      if (hit) hit.quantity = requested;
       else lines.push({ product_id, quantity, variant });
       await writeGuest(lines);
       setCart(await hydrateGuest(lines));
@@ -190,8 +200,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateCart = async (product_id: string, quantity: number, variant: string | null = null) => {
     if (!user) {
-      let lines = (await readGuest()).filter((l) => l.product_id !== product_id);
-      if (quantity > 0) lines.push({ product_id, quantity, variant });
+      const current = await readGuest();
+      let lines = current.filter(
+        (l) => !(l.product_id === product_id && (l.variant ?? null) === variant)
+      );
+      if (quantity > 0) {
+        const product = await api<any>(`/products/${product_id}`, { auth: false });
+        const available = Math.max(0, Number(product.stock) || 0);
+        const requested = quantity + lines
+          .filter((l) => l.product_id === product_id)
+          .reduce((total, l) => total + l.quantity, 0);
+        if (requested > available) {
+          throw new Error(available === 0 ? "This product is out of stock" : `Only ${available} item(s) available`);
+        }
+        lines.push({ product_id, quantity, variant });
+      }
       await writeGuest(lines);
       setCart(await hydrateGuest(lines));
       return;

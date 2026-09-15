@@ -33,7 +33,12 @@ export default function Cart() {
         data={cart.items}
         keyExtractor={(i) => i.product_id + (i.variant || "")}
         contentContainerStyle={{ padding: spacing.lg, paddingBottom: 200, gap: spacing.md }}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          const productQty = cart.items
+            .filter((line) => line.product_id === item.product_id)
+            .reduce((total, line) => total + line.quantity, 0);
+          const atStockLimit = productQty >= Math.max(0, Number(item.product.stock) || 0);
+          return (
           <View style={s.row} testID={`cart-item-${item.product_id}`}>
             <Pressable onPress={() => router.push(`/product/${item.product_id}`)}>
               <Image source={{ uri: item.product.images?.[0] }} style={s.thumb} contentFit="cover" />
@@ -45,12 +50,20 @@ export default function Cart() {
               <View style={s.qty}>
                 <Pressable testID={`qty-dec-${item.product_id}`} onPress={() => updateCart(item.product_id, item.quantity - 1, item.variant)} style={s.qtyBtn}><Ionicons name="remove" size={16} color={colors.onSurface} /></Pressable>
                 <Text style={{ minWidth: 20, textAlign: "center", fontWeight: "500" }}>{item.quantity}</Text>
-                <Pressable testID={`qty-inc-${item.product_id}`} onPress={() => updateCart(item.product_id, item.quantity + 1, item.variant)} style={s.qtyBtn}><Ionicons name="add" size={16} color={colors.onSurface} /></Pressable>
+                <Pressable
+                  testID={`qty-inc-${item.product_id}`}
+                  onPress={() => updateCart(item.product_id, item.quantity + 1, item.variant)}
+                  disabled={atStockLimit}
+                  style={[s.qtyBtn, atStockLimit && s.qtyBtnDisabled]}
+                >
+                  <Ionicons name="add" size={16} color={colors.onSurface} />
+                </Pressable>
                 <Pressable testID={`qty-del-${item.product_id}`} onPress={() => updateCart(item.product_id, 0, item.variant)} style={{ marginLeft: "auto", padding: 6 }}><Ionicons name="trash-outline" size={18} color={colors.onSurfaceMuted} /></Pressable>
               </View>
             </View>
           </View>
-        )}
+          );
+        }}
       />
 
       <View style={s.footer}>
@@ -90,5 +103,6 @@ const s = StyleSheet.create({
   thumb: { width: 84, height: 84, borderRadius: radius.sm, backgroundColor: colors.surfaceTertiary },
   qty: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 6 },
   qtyBtn: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.surfaceTertiary, alignItems: "center", justifyContent: "center" },
+  qtyBtnDisabled: { opacity: 0.4 },
   footer: { position: "absolute", left: 0, right: 0, bottom: 0, backgroundColor: colors.surfaceSecondary, padding: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border, gap: 4 },
 });

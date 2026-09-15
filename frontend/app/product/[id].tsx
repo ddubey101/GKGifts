@@ -9,6 +9,7 @@ import { api } from "@/src/api";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { Button, Price, Rating } from "@/src/ui";
 import { useCart } from "@/src/cart-store";
+import { useAuth } from "@/src/auth";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -16,11 +17,13 @@ export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { addToCart, toggleWishlist, isWished } = useCart();
+  const { user } = useAuth();
   const [p, setP] = useState<any>(null);
   const [gi, setGi] = useState(0);
   const [variant, setVariant] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState("");
+  const [notifySaved, setNotifySaved] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -46,7 +49,27 @@ export default function ProductDetail() {
     } finally { setBusy(false); }
   };
 
+  const notify = async () => {
+    if (!user) {
+      router.push(`/(auth)/login?redirect=${encodeURIComponent(`/product/${p.product_id}`)}`);
+      return;
+    }
+    setBusy(true);
+    try {
+      await api(`/products/${p.product_id}/notify`, { method: "POST" });
+      setNotifySaved(true);
+      setToast("We’ll notify you when it’s back");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    } catch (e: any) {
+      setToast(e?.message || "Could not save notification");
+    } finally {
+      setBusy(false);
+      setTimeout(() => setToast(""), 1800);
+    }
+  };
+
   const wished = isWished(p.product_id);
+  const outOfStock = Math.max(0, Number(p.stock) || 0) === 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top", "bottom"]}>
@@ -129,7 +152,15 @@ export default function ProductDetail() {
           <Text style={{ color: colors.onSurfaceMuted, fontSize: 11 }}>Total</Text>
           <Text style={{ fontSize: 18, fontWeight: "500" }}>₹{p.price.toLocaleString("en-IN")}</Text>
         </View>
-        <Button testID="add-to-cart" title="Add to Cart" onPress={add} loading={busy} style={{ paddingHorizontal: 32 }} />
+        <Button
+          testID={outOfStock ? "notify-me" : "add-to-cart"}
+          title={outOfStock ? (notifySaved ? "Notification saved" : "Notify me") : "Add to Cart"}
+          onPress={outOfStock ? notify : add}
+          loading={busy}
+          disabled={notifySaved}
+          variant={outOfStock ? "secondary" : "primary"}
+          style={{ paddingHorizontal: 32 }}
+        />
       </View>
 
       {!!toast && (

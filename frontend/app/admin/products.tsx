@@ -6,9 +6,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { api } from "@/src/api";
+import { API_BASE, api, getToken } from "@/src/api";
 import { useAuth } from "@/src/auth";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { Button, EmptyState } from "@/src/ui";
@@ -237,6 +238,8 @@ function ProductForm({
   onClose: () => void;
   onSave: () => void;
 }) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   if (!value) return null;
   const isEdit = !!value.product_id;
 
@@ -248,6 +251,52 @@ function ProductForm({
   };
   const addImage = () => setField("images", [...value.images, ""]);
   const removeImage = (i: number) => setField("images", value.images.filter((_, idx) => idx !== i));
+  const uploadImage = async () => {
+    setUploadError("");
+    if (Platform.OS !== "web") {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        setUploadError("Photo access is required to choose an image");
+        return;
+      }
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.9,
+      allowsMultipleSelection: false,
+    });
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    const form = new FormData();
+    if (Platform.OS === "web" && asset.file) {
+      form.append("file", asset.file, asset.fileName || asset.file.name);
+    } else {
+      form.append("file", {
+        uri: asset.uri,
+        name: asset.fileName || `product-${Date.now()}.jpg`,
+        type: asset.mimeType || "image/jpeg",
+      } as any);
+    }
+
+    setUploading(true);
+    try {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE}/admin/upload-image`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: form,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.detail || "Upload failed");
+      setField("images", [...value.images.filter(Boolean), data.url]);
+    } catch (error: any) {
+      setUploadError(error?.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
   const toggleTag = (tag: string) => {
     const t = value.tags || [];
     setField("tags", t.includes(tag) ? t.filter((x) => x !== tag) : [...t, tag]);
@@ -317,7 +366,19 @@ function ProductForm({
               })}
             </View>
 
-            <Text style={s.label}>Images (URLs)</Text>
+            <View style={s.imageHeading}>
+              <Text style={[s.label, { marginBottom: 0 }]}>Images</Text>
+              <Pressable
+                testID="form-img-upload"
+                onPress={uploadImage}
+                disabled={uploading}
+                style={[s.uploadBtn, uploading && s.uploadBtnDisabled]}
+              >
+                <Ionicons name="cloud-upload-outline" size={16} color={colors.onBrand} />
+                <Text style={s.uploadBtnText}>{uploading ? "Uploading…" : "Upload"}</Text>
+              </Pressable>
+            </View>
+            {!!uploadError && <Text style={s.uploadError}>{uploadError}</Text>}
             {value.images.map((img, i) => (
               <View key={i} style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
                 {!!img && <Image source={{ uri: img }} style={{ width: 40, height: 40, borderRadius: 6, backgroundColor: colors.surfaceTertiary }} contentFit="cover" />}
@@ -446,4 +507,15 @@ const s = StyleSheet.create({
   addBtn: {
     flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, alignSelf: "flex-start",
   },
+  imageHeading: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+  },
+  uploadBtn: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: colors.brandPrimary, borderRadius: radius.sm,
+    paddingHorizontal: 14, paddingVertical: 9,
+  },
+  uploadBtnDisabled: { opacity: 0.55 },
+  uploadBtnText: { color: colors.onBrand, fontWeight: "500", fontSize: 13 },
+  uploadError: { color: colors.error, fontSize: 12 },
 });
