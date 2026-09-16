@@ -48,7 +48,12 @@ Keep this string handy — you'll paste it into Render as `MONGO_URL`.
 6. Go back into the service → **Environment** → set `PUBLIC_BACKEND_URL` =
    `https://gkgifts-api.onrender.com` → **Save**. This triggers one more deploy so
    the seeded category/banner images point at the right host.
-7. Verify: open `https://gkgifts-api.onrender.com/api/health` in a browser — you
+7. Add these Cloudflare R2 values in **Environment**:
+   - `R2_ACCESS_KEY_ID` → the R2 API token access key ID.
+   - `R2_SECRET_ACCESS_KEY` → the R2 API token secret access key.
+   - `R2_PUBLIC_BASE_URL` → the public `r2.dev` or custom-domain URL for `gkgifts-images`.
+   The backend writes to bucket `gkgifts-images` under `products/`; its account endpoint is already configured.
+8. Verify: open `https://gkgifts-api.onrender.com/api/health` in a browser — you
    should see `{"ok":true,...}`.
 
 Free-tier note: Render spins the service down after 15 min of no traffic. First

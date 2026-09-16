@@ -17,7 +17,7 @@ import bcrypt
 import httpx
 import jwt as pyjwt
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
 from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRouter
 from fastapi.staticfiles import StaticFiles
@@ -903,11 +903,10 @@ MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
 
 @api.post("/admin/upload-image")
 async def admin_upload_image(
-    request: Request,
     file: UploadFile = File(...),
     _: dict = Depends(require_admin),
 ):
-    """Upload a product image to R2, or MongoDB when R2 is unavailable."""
+    """Upload a product image to the configured Cloudflare R2 bucket."""
     if file.content_type not in ALLOWED_UPLOAD_CT:
         raise HTTPException(400, f"Unsupported content-type {file.content_type}")
     data = await file.read()
@@ -915,34 +914,15 @@ async def admin_upload_image(
         raise HTTPException(413, f"File exceeds {MAX_UPLOAD_BYTES // 1024 // 1024} MB")
     if not data:
         raise HTTPException(400, "Empty file")
+    if not r2_configured():
+        raise HTTPException(503, "Image storage is not configured")
     key = r2_new_key(file.filename or "upload.bin")
-    if r2_configured():
+    try:
         url = await run_in_threadpool(r2_upload_bytes, data, key, file.content_type)
-    else:
-        image_id = new_id("img")
-        await db.product_images.insert_one({
-            "image_id": image_id,
-            "filename": file.filename or "upload",
-            "content_type": file.content_type,
-            "data": data,
-            "created_at": now_utc(),
-        })
-        url = str(request.url_for("product_image", image_id=image_id))
+    except Exception as exc:
+        logger.exception("R2 product image upload failed")
+        raise HTTPException(502, "Image upload failed") from exc
     return {"url": url, "key": key, "size": len(data)}
-
-
-@api.get("/images/{image_id}", name="product_image")
-async def product_image(image_id: str):
-    image = await db.product_images.find_one(
-        {"image_id": image_id}, {"_id": 0, "content_type": 1, "data": 1}
-    )
-    if not image:
-        raise HTTPException(404, "Image not found")
-    return Response(
-        content=image["data"],
-        media_type=image.get("content_type") or "application/octet-stream",
-        headers={"Cache-Control": "public, max-age=31536000, immutable"},
-    )
 
 
 
