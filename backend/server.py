@@ -1084,9 +1084,9 @@ DEMO_BANNERS = [
      "cta": "Discover", "link": "cat_kids_room"},
 ]
 
-# Real catalog is loaded via /app/backend/scripts/sync_gkgifts_store.py after
-# startup — no demo products are seeded here anymore.
-DEMO_PRODUCTS: list[dict] = []
+# Keep the real catalog available to startup so a new or cleared production
+# database is usable without a separate, one-off script invocation.
+from scripts.sync_gkgifts_store import CATALOG as STORE_CATALOG
 
 DEMO_COUPONS = [
     {"code": "WELCOME10", "type": "percent", "value": 10, "min_order": 999, "max_discount": 300,
@@ -1118,9 +1118,28 @@ async def startup():
         await db.banners.insert_many([dict(b) for b in DEMO_BANNERS])
     if await db.coupons.count_documents({}) == 0:
         await db.coupons.insert_many([dict(c) for c in DEMO_COUPONS])
-    if await db.products.count_documents({}) == 0:
-        for p in DEMO_PRODUCTS:
-            await db.products.insert_one({"product_id": new_id("prd"), **p, "created_at": now_utc()})
+    # Restore only missing catalog entries. Admin-created products and edits are
+    # preserved, while an empty/partially emptied database repairs itself on boot.
+    existing_names = {
+        p["name"].strip().lower()
+        async for p in db.products.find({}, {"_id": 0, "name": 1})
+        if p.get("name")
+    }
+    for catalog_item in STORE_CATALOG:
+        canonical_name = catalog_item["name"].strip().lower()
+        legacy_name = catalog_item.get("match", "").strip().lower()
+        if canonical_name in existing_names or (legacy_name and legacy_name in existing_names):
+            continue
+        product = {k: v for k, v in catalog_item.items() if k != "match"}
+        product.setdefault("variants", [])
+        product.setdefault("rating", 0)
+        product.setdefault("review_count", 0)
+        await db.products.insert_one({
+            "product_id": new_id("prd"),
+            **product,
+            "created_at": now_utc(),
+        })
+        existing_names.add(canonical_name)
     # remove legacy seed users from previous brand (aura) so credentials stay clean
     await db.users.delete_many({"email": {"$in": ["admin@aura.com", "demo@aura.com"]}})
     # seed admin + demo customer under new brand
