@@ -129,7 +129,7 @@ export default function Home() {
             renderItem={({ item }) => (
               <Pressable testID={`category-${item.category_id}`} onPress={() => router.push(`/category/${item.category_id}`)} style={s.catCard}>
                 <Image source={{ uri: item.image }} style={s.catImg} contentFit="cover" />
-                <Text style={s.catName} numberOfLines={1}>{item.name}</Text>
+                <Text style={s.catName} numberOfLines={2}>{item.name}</Text>
               </Pressable>
             )}
           />
