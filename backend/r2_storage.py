@@ -30,15 +30,11 @@ def _env(key: str) -> str:
 
 
 def R2_PUBLIC_URL() -> str:  # noqa: N802
-    return _env("R2_PUBLIC_BASE_URL") or _env("R2_PUBLIC_URL")
+    return _env("R2_PUBLIC_URL")
 
 
 def is_configured() -> bool:
-    return all((
-        _env("R2_ACCESS_KEY_ID"),
-        _env("R2_SECRET_ACCESS_KEY"),
-        R2_PUBLIC_URL(),
-    ))
+    return all(_env(k) for k in ("R2_ENDPOINT", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET", "R2_PUBLIC_URL"))
 
 
 def _client():
@@ -46,7 +42,7 @@ def _client():
         raise RuntimeError("R2 is not configured — check R2_* env vars in backend/.env")
     return boto3.client(
         "s3",
-        endpoint_url=_env("R2_ENDPOINT") or "https://5a4a7cdb60135f1c84763c0fd8def269.r2.cloudflarestorage.com",
+        endpoint_url=_env("R2_ENDPOINT"),
         aws_access_key_id=_env("R2_ACCESS_KEY_ID"),
         aws_secret_access_key=_env("R2_SECRET_ACCESS_KEY"),
         region_name="auto",
@@ -58,10 +54,10 @@ def upload_bytes(data: bytes, key: str, content_type: Optional[str] = None) -> s
     """Upload raw bytes to R2 under `key`. Returns the public URL."""
     ct = content_type or CONTENT_TYPES.get(Path(key).suffix.lower(), "application/octet-stream")
     _client().put_object(
-        Bucket=_env("R2_BUCKET") or "gkgifts-images", Key=key, Body=data,
+        Bucket=_env("R2_BUCKET"), Key=key, Body=data,
         ContentType=ct, CacheControl="public, max-age=31536000, immutable",
     )
-    return f"{R2_PUBLIC_URL()}/{key}"
+    return f"{_env('R2_PUBLIC_URL')}/{key}"
 
 
 def upload_file(local_path: str, key: Optional[str] = None) -> str:
