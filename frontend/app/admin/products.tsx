@@ -19,6 +19,7 @@ type Product = {
   name: string;
   brand: string;
   category_id: string;
+  category_ids?: string[];
   description?: string;
   price: number;
   mrp: number;
@@ -36,7 +37,8 @@ const EMPTY_FORM: Product = {
   product_id: "",
   name: "",
   brand: "",
-  category_id: "cat_home",
+  category_id: "",
+  category_ids: [],
   description: "",
   price: 0,
   mrp: 0,
@@ -75,8 +77,12 @@ export default function AdminProducts() {
     setToast(m); setTimeout(() => setToast(""), 1600);
   };
 
-  const openCreate = () => { setEditing({ ...EMPTY_FORM }); setModalOpen(true); };
-  const openEdit = (p: Product) => { setEditing({ ...p, tags: p.tags || [], variants: p.variants || [] }); setModalOpen(true); };
+  const openCreate = () => { setEditing({ ...EMPTY_FORM, category_ids: [] }); setModalOpen(true); };
+  const openEdit = (p: Product) => {
+    const categoryIds = p.category_ids?.length ? p.category_ids : (p.category_id ? [p.category_id] : []);
+    setEditing({ ...p, category_id: categoryIds[0] || "", category_ids: categoryIds, tags: p.tags || [], variants: p.variants || [] });
+    setModalOpen(true);
+  };
 
   const remove = async (p: Product) => {
     try {
@@ -97,10 +103,14 @@ export default function AdminProducts() {
 
   const save = async () => {
     if (!editing) return;
+    const categoryIds = editing.category_ids?.length
+      ? editing.category_ids
+      : (editing.category_id ? [editing.category_id] : []);
     const payload = {
       name: editing.name.trim(),
       brand: editing.brand.trim(),
-      category_id: editing.category_id,
+      category_id: categoryIds[0] || "",
+      category_ids: categoryIds,
       description: editing.description || "",
       price: Number(editing.price) || 0,
       mrp: Number(editing.mrp) || 0,
@@ -109,8 +119,8 @@ export default function AdminProducts() {
       tags: editing.tags || [],
       variants: editing.variants || [],
     };
-    if (!payload.name || !payload.brand || payload.price <= 0) {
-      notify("Name, brand and price are required");
+    if (!payload.name || !payload.brand || payload.price <= 0 || payload.category_ids.length === 0) {
+      notify("Name, brand, price and at least one category are required");
       return;
     }
     try {
@@ -301,6 +311,15 @@ function ProductForm({
     const t = value.tags || [];
     setField("tags", t.includes(tag) ? t.filter((x) => x !== tag) : [...t, tag]);
   };
+  const toggleCategory = (categoryId: string) => {
+    const selected = value.category_ids?.length
+      ? value.category_ids
+      : (value.category_id ? [value.category_id] : []);
+    const next = selected.includes(categoryId)
+      ? selected.filter((id) => id !== categoryId)
+      : [...selected, categoryId];
+    onChange({ ...value, category_ids: next, category_id: next[0] || "" });
+  };
 
   return (
     <View style={s.modalRoot}>
@@ -317,15 +336,19 @@ function ProductForm({
             <Field label="Name" testID="form-name" value={value.name} onChangeText={(v) => setField("name", v)} />
             <Field label="Brand" testID="form-brand" value={value.brand} onChangeText={(v) => setField("brand", v)} />
 
-            <Text style={s.label}>Category</Text>
+            <Text style={s.label}>Categories</Text>
+            <Text style={s.helperText}>Select one or more</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: spacing.lg }}>
               {cats.map((c) => {
-                const active = value.category_id === c.category_id;
+                const active = (value.category_ids?.length
+                  ? value.category_ids
+                  : (value.category_id ? [value.category_id] : [])
+                ).includes(c.category_id);
                 return (
                   <Pressable
                     key={c.category_id}
                     testID={`form-cat-${c.category_id}`}
-                    onPress={() => setField("category_id", c.category_id)}
+                    onPress={() => toggleCategory(c.category_id)}
                     style={[s.chip, active && s.chipActive]}
                   >
                     <Text style={[s.chipText, active && s.chipTextActive]}>{c.name}</Text>
@@ -489,6 +512,9 @@ const s = StyleSheet.create({
   label: {
     fontSize: 11, color: colors.onSurfaceMuted, marginBottom: 6, marginTop: 4,
     textTransform: "uppercase", letterSpacing: 0.5,
+  },
+  helperText: {
+    color: colors.onSurfaceMuted, fontSize: 12, marginTop: -6,
   },
   input: {
     backgroundColor: colors.surfaceSecondary, borderRadius: radius.sm,
