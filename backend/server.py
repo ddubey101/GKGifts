@@ -17,7 +17,7 @@ import bcrypt
 import httpx
 import jwt as pyjwt
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRouter
 from fastapi.staticfiles import StaticFiles
@@ -903,10 +903,11 @@ MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
 
 @api.post("/admin/upload-image")
 async def admin_upload_image(
+    request: Request,
     file: UploadFile = File(...),
     _: dict = Depends(require_admin),
 ):
-    """Upload a product image to the configured Cloudflare R2 bucket."""
+    """Upload a product image to R2, or MongoDB when R2 is unavailable."""
     if file.content_type not in ALLOWED_UPLOAD_CT:
         raise HTTPException(400, f"Unsupported content-type {file.content_type}")
     data = await file.read()
@@ -914,15 +915,34 @@ async def admin_upload_image(
         raise HTTPException(413, f"File exceeds {MAX_UPLOAD_BYTES // 1024 // 1024} MB")
     if not data:
         raise HTTPException(400, "Empty file")
-    if not r2_configured():
-        raise HTTPException(503, "Image storage is not configured")
     key = r2_new_key(file.filename or "upload.bin")
-    try:
+    if r2_configured():
         url = await run_in_threadpool(r2_upload_bytes, data, key, file.content_type)
-    except Exception as exc:
-        logger.exception("R2 product image upload failed")
-        raise HTTPException(502, "Image upload failed") from exc
+    else:
+        image_id = new_id("img")
+        await db.product_images.insert_one({
+            "image_id": image_id,
+            "filename": file.filename or "upload",
+            "content_type": file.content_type,
+            "data": data,
+            "created_at": now_utc(),
+        })
+        url = str(request.url_for("product_image", image_id=image_id))
     return {"url": url, "key": key, "size": len(data)}
+
+
+@api.get("/images/{image_id}", name="product_image")
+async def product_image(image_id: str):
+    image = await db.product_images.find_one(
+        {"image_id": image_id}, {"_id": 0, "content_type": 1, "data": 1}
+    )
+    if not image:
+        raise HTTPException(404, "Image not found")
+    return Response(
+        content=image["data"],
+        media_type=image.get("content_type") or "application/octet-stream",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
 
 
 
@@ -1064,9 +1084,9 @@ DEMO_BANNERS = [
      "cta": "Discover", "link": "cat_kids_room"},
 ]
 
-# Real catalog is loaded via /app/backend/scripts/sync_gkgifts_store.py after
-# startup — no demo products are seeded here anymore.
-DEMO_PRODUCTS: list[dict] = []
+# Keep the real catalog available to startup so a new or cleared production
+# database is usable without a separate, one-off script invocation.
+from scripts.sync_gkgifts_store import CATALOG as STORE_CATALOG
 
 DEMO_COUPONS = [
     {"code": "WELCOME10", "type": "percent", "value": 10, "min_order": 999, "max_discount": 300,
@@ -1098,9 +1118,28 @@ async def startup():
         await db.banners.insert_many([dict(b) for b in DEMO_BANNERS])
     if await db.coupons.count_documents({}) == 0:
         await db.coupons.insert_many([dict(c) for c in DEMO_COUPONS])
-    if await db.products.count_documents({}) == 0:
-        for p in DEMO_PRODUCTS:
-            await db.products.insert_one({"product_id": new_id("prd"), **p, "created_at": now_utc()})
+    # Restore only missing catalog entries. Admin-created products and edits are
+    # preserved, while an empty/partially emptied database repairs itself on boot.
+    existing_names = {
+        p["name"].strip().lower()
+        async for p in db.products.find({}, {"_id": 0, "name": 1})
+        if p.get("name")
+    }
+    for catalog_item in STORE_CATALOG:
+        canonical_name = catalog_item["name"].strip().lower()
+        legacy_name = catalog_item.get("match", "").strip().lower()
+        if canonical_name in existing_names or (legacy_name and legacy_name in existing_names):
+            continue
+        product = {k: v for k, v in catalog_item.items() if k != "match"}
+        product.setdefault("variants", [])
+        product.setdefault("rating", 0)
+        product.setdefault("review_count", 0)
+        await db.products.insert_one({
+            "product_id": new_id("prd"),
+            **product,
+            "created_at": now_utc(),
+        })
+        existing_names.add(canonical_name)
     # remove legacy seed users from previous brand (aura) so credentials stay clean
     await db.users.delete_many({"email": {"$in": ["admin@aura.com", "demo@aura.com"]}})
     # seed admin + demo customer under new brand
