@@ -9,6 +9,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { useIconFonts } from "@/src/hooks/use-icon-fonts";
 import { AuthProvider, useAuth } from "@/src/auth";
 import { CartProvider } from "@/src/cart-store";
+import { pingBackend } from "@/src/api";
 
 LogBox.ignoreAllLogs(true);
 SplashScreen.preventAutoHideAsync();
@@ -58,6 +59,12 @@ function Gate() {
 
 export default function RootLayout() {
   const [loaded, error] = useIconFonts();
+  useEffect(() => {
+    void pingBackend();
+    const interval = setInterval(() => void pingBackend(), 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (loaded || error) SplashScreen.hideAsync();
     if (isWeb && typeof document !== "undefined") {
