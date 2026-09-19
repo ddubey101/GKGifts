@@ -199,6 +199,10 @@ class CheckoutIn(BaseModel):
     delivery_slot: Optional[str] = None
 
 
+class VisitorTrackIn(BaseModel):
+    visitor_id: str = Field(min_length=16, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
+
+
 class ProductIn(BaseModel):
     name: str
     brand: str
@@ -837,6 +841,23 @@ async def notifs_read_all(user: dict = Depends(current_user)):
     return {"ok": True}
 
 
+# ---------- visitors --------------------------------------------------------
+
+@api.post("/visitors/track")
+async def track_visitor(body: VisitorTrackIn):
+    now = now_utc()
+    result = await db.site_visitors.update_one(
+        {"visitor_id": body.visitor_id},
+        {
+            "$setOnInsert": {"visitor_id": body.visitor_id, "first_seen": now},
+            "$set": {"last_seen": now},
+            "$inc": {"visit_count": 1},
+        },
+        upsert=True,
+    )
+    return {"ok": True, "is_new": result.upserted_id is not None}
+
+
 # ---------- admin -----------------------------------------------------------
 
 @api.get("/admin/stats")
@@ -849,6 +870,7 @@ async def admin_stats(_: dict = Depends(require_admin)):
     users = await db.users.count_documents({})
     products = await db.products.count_documents({})
     low_stock = await db.products.count_documents({"stock": {"$lt": 10}})
+    visitors = await db.site_visitors.count_documents({})
     top = await db.products.find({}, {"_id": 0}).sort("review_count", -1).limit(5).to_list(5)
     return {
         "revenue": round(revenue, 2),
@@ -856,6 +878,7 @@ async def admin_stats(_: dict = Depends(require_admin)):
         "users": users,
         "products": products,
         "low_stock": low_stock,
+        "visitors": visitors,
         "top_products": top,
         "recent_orders": sorted(orders, key=lambda o: o["created_at"], reverse=True)[:8],
     }
@@ -1126,6 +1149,7 @@ async def startup():
     await db.products.create_index("product_id", unique=True)
     await db.categories.create_index("category_id", unique=True)
     await db.orders.create_index("order_id", unique=True)
+    await db.site_visitors.create_index("visitor_id", unique=True)
     await db.restock_notifications.create_index(
         [("user_id", 1), ("product_id", 1)], unique=True
     )

@@ -12,6 +12,7 @@ import { useAuth } from "@/src/auth";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { ProductCard } from "@/src/product-card";
 import { useResponsiveCols } from "@/src/use-responsive-cols";
+import { trackVisitor } from "@/src/visitor";
 
 export default function Home() {
   const router = useRouter();
@@ -42,6 +43,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    trackVisitor().catch((error) => console.log("visitor tracking", error));
+  }, []);
 
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
