@@ -126,12 +126,23 @@ export default function Home() {
             )}
           />
 
-          <LinearGradient
-            colors={LOGO_RAINBOW_FADE}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={s.categorySection}
-          >
+          <View style={s.categorySection}>
+            <LinearGradient
+              colors={LOGO_RAINBOW_FADE}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <LinearGradient
+              pointerEvents="none"
+              colors={[colors.surface, "transparent"]}
+              style={s.categoryFadeTop}
+            />
+            <LinearGradient
+              pointerEvents="none"
+              colors={["transparent", colors.surface]}
+              style={s.categoryFadeBottom}
+            />
             <SectionHeader title="Shop by category" hPad={hPad} />
             <FlatList
               data={cats}
@@ -150,7 +161,7 @@ export default function Home() {
                 );
               }}
             />
-          </LinearGradient>
+          </View>
 
           {flash.length > 0 && (
             <>
@@ -221,7 +232,9 @@ const s = StyleSheet.create({
   bannerScrim: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0 },
   bannerText: { position: "absolute", left: spacing.lg, bottom: spacing.lg, gap: 4 },
   bannerCta: { marginTop: 8, backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, alignSelf: "flex-start" },
-  categorySection: { marginTop: spacing.xl },
+  categorySection: { marginTop: spacing.xl, overflow: "hidden" },
+  categoryFadeTop: { position: "absolute", top: 0, left: 0, right: 0, height: 44 },
+  categoryFadeBottom: { position: "absolute", bottom: 0, left: 0, right: 0, height: 44 },
   catCard: { width: 80, alignItems: "center", gap: 8 },
   catRing: { width: 72, height: 72, borderRadius: 36, padding: 3, alignItems: "center", justifyContent: "center" },
   catImg: { width: 66, height: 66, borderRadius: 33, backgroundColor: colors.surfaceTertiary },
