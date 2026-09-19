@@ -5,6 +5,24 @@ import { Platform } from "react-native";
 const BASE = process.env.EXPO_PUBLIC_BACKEND_URL || "";
 export const API_BASE = `${BASE}/api`;
 
+export async function pingBackend(): Promise<void> {
+  if (!BASE) return;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    await fetch(`${BASE}/ping`, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch {
+    // Keep-alive requests are intentionally silent and never interrupt the app.
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 const TOKEN_KEY = "aura_token";
 
 export async function getToken(): Promise<string | null> {

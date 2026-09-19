@@ -110,11 +110,20 @@ export default function Admin() {
           contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxxl }}
           renderItem={({ item }) => (
             <View style={s.card} testID={`admin-order-${item.order_id}`}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ fontWeight: "500" }}>#{item.order_id.slice(-6).toUpperCase()}</Text>
-                <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>{new Date(item.created_at).toLocaleDateString()}</Text>
-              </View>
-              <Text style={{ color: colors.onSurfaceMuted, marginTop: 4, fontSize: 12 }}>{item.items.length} items · ₹{item.total}</Text>
+              <Pressable
+                testID={`admin-order-details-${item.order_id}`}
+                onPress={() => router.push(`/admin/orders/${item.order_id}`)}
+              >
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <Text style={{ fontWeight: "500" }}>#{item.order_id.slice(-6).toUpperCase()}</Text>
+                  <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>{new Date(item.created_at).toLocaleDateString()}</Text>
+                </View>
+                <Text style={{ color: colors.onSurfaceMuted, marginTop: 4, fontSize: 12 }}>{item.items.length} items · ₹{item.total}</Text>
+                <View style={s.detailsLink}>
+                  <Text style={s.detailsLinkText}>View order details</Text>
+                  <Ionicons name="chevron-forward" size={15} color={colors.brandPrimary} />
+                </View>
+              </Pressable>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10, gap: 8 }}>
                 <View style={[s.badge, { backgroundColor: item.status === "delivered" ? colors.success : item.status === "cancelled" ? colors.error : colors.brandPrimary }]}>
                   <Text style={{ color: "#fff", fontSize: 11, textTransform: "capitalize", fontWeight: "500" }}>{item.status.replace(/_/g, " ")}</Text>
@@ -156,4 +165,6 @@ const s = StyleSheet.create({
   thumb: { width: 44, height: 44, borderRadius: radius.sm, backgroundColor: colors.surfaceTertiary },
   badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
   advance: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.brandSecondary },
+  detailsLink: { flexDirection: "row", alignItems: "center", gap: 2, marginTop: 10, alignSelf: "flex-start" },
+  detailsLinkText: { color: colors.brandPrimary, fontSize: 12, fontWeight: "500" },
 });

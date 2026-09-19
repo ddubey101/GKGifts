@@ -889,6 +889,14 @@ async def admin_orders(_: dict = Depends(require_admin)):
     return await db.orders.find({}, {"_id": 0}).sort("created_at", -1).limit(200).to_list(200)
 
 
+@api.get("/admin/orders/{order_id}")
+async def admin_order_get(order_id: str, _: dict = Depends(require_admin)):
+    order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(404, "Not found")
+    return order
+
+
 @api.post("/admin/orders/{order_id}/status")
 async def admin_order_status(order_id: str, body: dict, _: dict = Depends(require_admin)):
     status = body.get("status")
