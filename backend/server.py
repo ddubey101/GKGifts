@@ -199,10 +199,15 @@ class CheckoutIn(BaseModel):
     delivery_slot: Optional[str] = None
 
 
+class VisitorTrackIn(BaseModel):
+    visitor_id: str = Field(min_length=16, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
+
+
 class ProductIn(BaseModel):
     name: str
     brand: str
     category_id: str
+    category_ids: List[str] = Field(default_factory=list)
     description: str = ""
     price: float
     mrp: float
@@ -218,6 +223,7 @@ class ProductPatchIn(BaseModel):
     name: Optional[str] = None
     brand: Optional[str] = None
     category_id: Optional[str] = None
+    category_ids: Optional[List[str]] = None
     description: Optional[str] = None
     price: Optional[float] = None
     mrp: Optional[float] = None
@@ -393,15 +399,23 @@ async def list_products(
     if category_id in PRICE_BAND_CATEGORIES:
         query["price"] = {"$lte": PRICE_BAND_CATEGORIES[category_id]}
     elif category_id:
-        query["category_id"] = category_id
+        query["$or"] = [
+            {"category_ids": category_id},
+            {"category_id": category_id},
+        ]
     if tag:
         query["tags"] = tag
     if q:
-        query["$or"] = [
+        search_query = [
             {"name": {"$regex": q, "$options": "i"}},
             {"brand": {"$regex": q, "$options": "i"}},
             {"tags": {"$regex": q, "$options": "i"}},
         ]
+        if "$or" in query:
+            category_query = query.pop("$or")
+            query["$and"] = [{"$or": category_query}, {"$or": search_query}]
+        else:
+            query["$or"] = search_query
     sort_map = {
         "popular": [("review_count", -1)],
         "price_asc": [("price", 1)],
@@ -827,6 +841,23 @@ async def notifs_read_all(user: dict = Depends(current_user)):
     return {"ok": True}
 
 
+# ---------- visitors --------------------------------------------------------
+
+@api.post("/visitors/track")
+async def track_visitor(body: VisitorTrackIn):
+    now = now_utc()
+    result = await db.visitor_information.update_one(
+        {"visitor_id": body.visitor_id},
+        {
+            "$setOnInsert": {"visitor_id": body.visitor_id, "first_seen": now},
+            "$set": {"last_seen": now},
+            "$inc": {"visit_count": 1},
+        },
+        upsert=True,
+    )
+    return {"ok": True, "is_new": result.upserted_id is not None}
+
+
 # ---------- admin -----------------------------------------------------------
 
 @api.get("/admin/stats")
@@ -839,6 +870,7 @@ async def admin_stats(_: dict = Depends(require_admin)):
     users = await db.users.count_documents({})
     products = await db.products.count_documents({})
     low_stock = await db.products.count_documents({"stock": {"$lt": 10}})
+    visitors = await db.visitor_information.count_documents({})
     top = await db.products.find({}, {"_id": 0}).sort("review_count", -1).limit(5).to_list(5)
     return {
         "revenue": round(revenue, 2),
@@ -846,6 +878,7 @@ async def admin_stats(_: dict = Depends(require_admin)):
         "users": users,
         "products": products,
         "low_stock": low_stock,
+        "visitors": visitors,
         "top_products": top,
         "recent_orders": sorted(orders, key=lambda o: o["created_at"], reverse=True)[:8],
     }
@@ -892,7 +925,17 @@ async def admin_order_status(order_id: str, body: dict, _: dict = Depends(requir
 @api.post("/admin/products")
 async def admin_product_create(body: ProductIn, _: dict = Depends(require_admin)):
     pid = new_id("prd")
-    doc = {"product_id": pid, **body.model_dump(), "created_at": now_utc()}
+    product_data = body.model_dump()
+    category_ids = list(dict.fromkeys(
+        category_id.strip()
+        for category_id in (product_data.get("category_ids") or [product_data["category_id"]])
+        if category_id.strip()
+    ))
+    if not category_ids:
+        raise HTTPException(400, "At least one category is required")
+    product_data["category_ids"] = category_ids
+    product_data["category_id"] = category_ids[0]
+    doc = {"product_id": pid, **product_data, "created_at": now_utc()}
     await db.products.insert_one(dict(doc))
     return _strip(doc)
 
@@ -955,12 +998,20 @@ async def admin_product_list(
 ):
     query: dict = {}
     if category_id:
-        query["category_id"] = category_id
-    if q:
         query["$or"] = [
+            {"category_ids": category_id},
+            {"category_id": category_id},
+        ]
+    if q:
+        search_query = [
             {"name": {"$regex": q, "$options": "i"}},
             {"brand": {"$regex": q, "$options": "i"}},
         ]
+        if "$or" in query:
+            category_query = query.pop("$or")
+            query["$and"] = [{"$or": category_query}, {"$or": search_query}]
+        else:
+            query["$or"] = search_query
     return await db.products.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
 
 
@@ -995,6 +1046,16 @@ async def admin_product_update(
     product_id: str, body: ProductPatchIn, _: dict = Depends(require_admin)
 ):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    if "category_ids" in updates:
+        category_ids = list(dict.fromkeys(
+            category_id.strip() for category_id in updates["category_ids"] if category_id.strip()
+        ))
+        if not category_ids:
+            raise HTTPException(400, "At least one category is required")
+        updates["category_ids"] = category_ids
+        updates["category_id"] = category_ids[0]
+    elif "category_id" in updates:
+        updates["category_ids"] = [updates["category_id"]]
     if not updates:
         raise HTTPException(400, "No fields to update")
     previous = await db.products.find_one({"product_id": product_id}, {"_id": 0})
@@ -1108,6 +1169,7 @@ async def startup():
     await db.products.create_index("product_id", unique=True)
     await db.categories.create_index("category_id", unique=True)
     await db.orders.create_index("order_id", unique=True)
+    await db.visitor_information.create_index("visitor_id", unique=True)
     await db.restock_notifications.create_index(
         [("user_id", 1), ("product_id", 1)], unique=True
     )
