@@ -14,6 +14,14 @@ import { ProductCard } from "@/src/product-card";
 import { useResponsiveCols } from "@/src/use-responsive-cols";
 import { trackVisitor } from "@/src/visitor";
 
+const CATEGORY_RAINBOWS = [
+  ["#00C7DF", "#0878EA"],
+  ["#FFD400", "#FF5A00"],
+  ["#FF4B00", "#FFD400"],
+  ["#0867F2", "#7515E5"],
+  ["#7515E5", "#ED006E"],
+] as const;
+
 export default function Home() {
   const router = useRouter();
   const { user } = useAuth();
@@ -123,20 +131,32 @@ export default function Home() {
             )}
           />
 
-          <SectionHeader title="Shop by category" hPad={hPad} />
-          <FlatList
-            data={cats}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(c) => c.category_id}
-            contentContainerStyle={{ paddingHorizontal: hPad, gap: spacing.md }}
-            renderItem={({ item }) => (
-              <Pressable testID={`category-${item.category_id}`} onPress={() => router.push(`/category/${item.category_id}`)} style={s.catCard}>
-                <Image source={{ uri: item.image }} style={s.catImg} contentFit="cover" />
-                <Text style={s.catName} numberOfLines={2}>{item.name}</Text>
-              </Pressable>
-            )}
-          />
+          <LinearGradient
+            colors={["rgba(0,199,223,0.16)", "rgba(255,212,0,0.15)", "rgba(237,0,110,0.13)"]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={s.categorySection}
+          >
+            <SectionHeader title="Shop by category" hPad={hPad} />
+            <FlatList
+              data={cats}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(c) => c.category_id}
+              contentContainerStyle={{ paddingHorizontal: hPad, gap: spacing.md, paddingBottom: spacing.lg }}
+              renderItem={({ item, index }) => {
+                const rainbow = CATEGORY_RAINBOWS[index % CATEGORY_RAINBOWS.length];
+                return (
+                  <Pressable testID={`category-${item.category_id}`} onPress={() => router.push(`/category/${item.category_id}`)} style={s.catCard}>
+                    <LinearGradient colors={rainbow} style={s.catRing}>
+                      <Image source={{ uri: item.image }} style={s.catImg} contentFit="cover" />
+                    </LinearGradient>
+                    <Text style={s.catName} numberOfLines={2}>{item.name}</Text>
+                  </Pressable>
+                );
+              }}
+            />
+          </LinearGradient>
 
           {flash.length > 0 && (
             <>
@@ -207,8 +227,10 @@ const s = StyleSheet.create({
   bannerScrim: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0 },
   bannerText: { position: "absolute", left: spacing.lg, bottom: spacing.lg, gap: 4 },
   bannerCta: { marginTop: 8, backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, alignSelf: "flex-start" },
+  categorySection: { marginTop: spacing.xl },
   catCard: { width: 80, alignItems: "center", gap: 8 },
-  catImg: { width: 68, height: 68, borderRadius: 34, backgroundColor: colors.surfaceTertiary },
-  catName: { fontSize: 12, color: colors.onSurface, textAlign: "center" },
+  catRing: { width: 72, height: 72, borderRadius: 36, padding: 3, alignItems: "center", justifyContent: "center" },
+  catImg: { width: 66, height: 66, borderRadius: 33, backgroundColor: colors.surfaceTertiary },
+  catName: { fontSize: 12, color: colors.onSurface, fontWeight: "500", textAlign: "center" },
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-start" },
 });
