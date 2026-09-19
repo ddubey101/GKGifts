@@ -846,7 +846,7 @@ async def notifs_read_all(user: dict = Depends(current_user)):
 @api.post("/visitors/track")
 async def track_visitor(body: VisitorTrackIn):
     now = now_utc()
-    result = await db.site_visitors.update_one(
+    result = await db.visitor_information.update_one(
         {"visitor_id": body.visitor_id},
         {
             "$setOnInsert": {"visitor_id": body.visitor_id, "first_seen": now},
@@ -870,7 +870,7 @@ async def admin_stats(_: dict = Depends(require_admin)):
     users = await db.users.count_documents({})
     products = await db.products.count_documents({})
     low_stock = await db.products.count_documents({"stock": {"$lt": 10}})
-    visitors = await db.site_visitors.count_documents({})
+    visitors = await db.visitor_information.count_documents({})
     top = await db.products.find({}, {"_id": 0}).sort("review_count", -1).limit(5).to_list(5)
     return {
         "revenue": round(revenue, 2),
@@ -1149,7 +1149,7 @@ async def startup():
     await db.products.create_index("product_id", unique=True)
     await db.categories.create_index("category_id", unique=True)
     await db.orders.create_index("order_id", unique=True)
-    await db.site_visitors.create_index("visitor_id", unique=True)
+    await db.visitor_information.create_index("visitor_id", unique=True)
     await db.restock_notifications.create_index(
         [("user_id", 1), ("product_id", 1)], unique=True
     )
