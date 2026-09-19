@@ -14,13 +14,7 @@ import { ProductCard } from "@/src/product-card";
 import { useResponsiveCols } from "@/src/use-responsive-cols";
 import { trackVisitor } from "@/src/visitor";
 
-const CATEGORY_RAINBOWS = [
-  ["#00C7DF", "#0878EA"],
-  ["#FFD400", "#FF5A00"],
-  ["#FF4B00", "#FFD400"],
-  ["#0867F2", "#7515E5"],
-  ["#7515E5", "#ED006E"],
-] as const;
+const LOGO_RAINBOW = ["#08CBE5", "#0078E8", "#6812E4", "#ED087D", "#F52B08", "#FFCE05"] as const;
 
 export default function Home() {
   const router = useRouter();
@@ -132,7 +126,7 @@ export default function Home() {
           />
 
           <LinearGradient
-            colors={["rgba(0,199,223,0.16)", "rgba(255,212,0,0.15)", "rgba(237,0,110,0.13)"]}
+            colors={LOGO_RAINBOW}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={s.categorySection}
@@ -144,11 +138,10 @@ export default function Home() {
               showsHorizontalScrollIndicator={false}
               keyExtractor={(c) => c.category_id}
               contentContainerStyle={{ paddingHorizontal: hPad, gap: spacing.md, paddingBottom: spacing.lg }}
-              renderItem={({ item, index }) => {
-                const rainbow = CATEGORY_RAINBOWS[index % CATEGORY_RAINBOWS.length];
+              renderItem={({ item }) => {
                 return (
                   <Pressable testID={`category-${item.category_id}`} onPress={() => router.push(`/category/${item.category_id}`)} style={s.catCard}>
-                    <LinearGradient colors={rainbow} style={s.catRing}>
+                    <LinearGradient colors={LOGO_RAINBOW} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={s.catRing}>
                       <Image source={{ uri: item.image }} style={s.catImg} contentFit="cover" />
                     </LinearGradient>
                     <Text style={s.catName} numberOfLines={2}>{item.name}</Text>
