@@ -15,6 +15,7 @@ import { useResponsiveCols } from "@/src/use-responsive-cols";
 import { trackVisitor } from "@/src/visitor";
 
 const LOGO_RAINBOW = ["#08CBE5", "#0078E8", "#6812E4", "#ED087D", "#F52B08", "#FFCE05"] as const;
+const LOGO_RAINBOW_FADE = ["rgba(8,203,229,0.5)", "rgba(0,120,232,0.5)", "rgba(104,18,228,0.5)", "rgba(237,8,125,0.5)", "rgba(245,43,8,0.5)", "rgba(255,206,5,0.5)"] as const;
 
 export default function Home() {
   const router = useRouter();
@@ -126,7 +127,7 @@ export default function Home() {
           />
 
           <LinearGradient
-            colors={LOGO_RAINBOW}
+            colors={LOGO_RAINBOW_FADE}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={s.categorySection}
