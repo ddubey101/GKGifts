@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  FlatList, Image as RNImage, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
+  FlatList, Image as RNImage, NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -31,6 +31,8 @@ export default function Home() {
   const [featured, setFeatured] = useState<any[]>([]);
   const [newIn, setNewIn] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const bannerListRef = useRef<FlatList<any>>(null);
+  const bannerIndexRef = useRef(0);
 
   const load = useCallback(async () => {
     try {
@@ -49,6 +51,27 @@ export default function Home() {
   useEffect(() => {
     trackVisitor().catch((error) => console.log("visitor tracking", error));
   }, []);
+  useEffect(() => {
+    bannerIndexRef.current = 0;
+    bannerListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    if (banners.length < 2) return;
+
+    const interval = setInterval(() => {
+      const nextIndex = (bannerIndexRef.current + 1) % banners.length;
+      bannerIndexRef.current = nextIndex;
+      bannerListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [banners.length, bannerWidth]);
+
+  const onBannerScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const itemWidth = bannerWidth + spacing.md;
+    bannerIndexRef.current = Math.min(
+      banners.length - 1,
+      Math.max(0, Math.round(event.nativeEvent.contentOffset.x / itemWidth)),
+    );
+  };
 
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
@@ -104,11 +127,20 @@ export default function Home() {
           </Pressable>
 
           <FlatList
+            ref={bannerListRef}
             data={banners}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(b) => b.banner_id}
             contentContainerStyle={{ paddingHorizontal: hPad, gap: spacing.md }}
+            decelerationRate="fast"
+            snapToInterval={bannerWidth + spacing.md}
+            onMomentumScrollEnd={onBannerScrollEnd}
+            getItemLayout={(_, index) => ({
+              length: bannerWidth + spacing.md,
+              offset: (bannerWidth + spacing.md) * index,
+              index,
+            })}
             renderItem={({ item }) => (
               <Pressable
                 testID={`banner-${item.banner_id}`}
