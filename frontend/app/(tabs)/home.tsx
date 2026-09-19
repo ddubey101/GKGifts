@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  FlatList, Image as RNImage, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
+  FlatList, Image as RNImage, NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -13,6 +13,9 @@ import { colors, radius, spacing, typography } from "@/src/theme";
 import { ProductCard } from "@/src/product-card";
 import { useResponsiveCols } from "@/src/use-responsive-cols";
 import { trackVisitor } from "@/src/visitor";
+
+const LOGO_RAINBOW = ["#08CBE5", "#0078E8", "#6812E4", "#ED087D", "#F52B08", "#FFCE05"] as const;
+const LOGO_RAINBOW_FADE = ["rgba(8,203,229,0.5)", "rgba(0,120,232,0.5)", "rgba(104,18,228,0.5)", "rgba(237,8,125,0.5)", "rgba(245,43,8,0.5)", "rgba(255,206,5,0.5)"] as const;
 
 export default function Home() {
   const router = useRouter();
@@ -28,6 +31,8 @@ export default function Home() {
   const [featured, setFeatured] = useState<any[]>([]);
   const [newIn, setNewIn] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const bannerListRef = useRef<FlatList<any>>(null);
+  const bannerIndexRef = useRef(0);
 
   const load = useCallback(async () => {
     try {
@@ -46,6 +51,27 @@ export default function Home() {
   useEffect(() => {
     trackVisitor().catch((error) => console.log("visitor tracking", error));
   }, []);
+  useEffect(() => {
+    bannerIndexRef.current = 0;
+    bannerListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    if (banners.length < 2) return;
+
+    const interval = setInterval(() => {
+      const nextIndex = (bannerIndexRef.current + 1) % banners.length;
+      bannerIndexRef.current = nextIndex;
+      bannerListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [banners.length, bannerWidth]);
+
+  const onBannerScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const itemWidth = bannerWidth + spacing.md;
+    bannerIndexRef.current = Math.min(
+      banners.length - 1,
+      Math.max(0, Math.round(event.nativeEvent.contentOffset.x / itemWidth)),
+    );
+  };
 
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
@@ -101,11 +127,20 @@ export default function Home() {
           </Pressable>
 
           <FlatList
+            ref={bannerListRef}
             data={banners}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(b) => b.banner_id}
             contentContainerStyle={{ paddingHorizontal: hPad, gap: spacing.md }}
+            decelerationRate="fast"
+            snapToInterval={bannerWidth + spacing.md}
+            onMomentumScrollEnd={onBannerScrollEnd}
+            getItemLayout={(_, index) => ({
+              length: bannerWidth + spacing.md,
+              offset: (bannerWidth + spacing.md) * index,
+              index,
+            })}
             renderItem={({ item }) => (
               <Pressable
                 testID={`banner-${item.banner_id}`}
@@ -123,20 +158,42 @@ export default function Home() {
             )}
           />
 
-          <SectionHeader title="Shop by category" hPad={hPad} />
-          <FlatList
-            data={cats}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(c) => c.category_id}
-            contentContainerStyle={{ paddingHorizontal: hPad, gap: spacing.md }}
-            renderItem={({ item }) => (
-              <Pressable testID={`category-${item.category_id}`} onPress={() => router.push(`/category/${item.category_id}`)} style={s.catCard}>
-                <Image source={{ uri: item.image }} style={s.catImg} contentFit="cover" />
-                <Text style={s.catName} numberOfLines={2}>{item.name}</Text>
-              </Pressable>
-            )}
-          />
+          <View style={s.categorySection}>
+            <LinearGradient
+              colors={LOGO_RAINBOW_FADE}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <LinearGradient
+              pointerEvents="none"
+              colors={[colors.surface, "transparent"]}
+              style={s.categoryFadeTop}
+            />
+            <LinearGradient
+              pointerEvents="none"
+              colors={["transparent", colors.surface]}
+              style={s.categoryFadeBottom}
+            />
+            <SectionHeader title="Shop by category" hPad={hPad} />
+            <FlatList
+              data={cats}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(c) => c.category_id}
+              contentContainerStyle={{ paddingHorizontal: hPad, gap: spacing.md, paddingBottom: spacing.lg }}
+              renderItem={({ item }) => {
+                return (
+                  <Pressable testID={`category-${item.category_id}`} onPress={() => router.push(`/category/${item.category_id}`)} style={s.catCard}>
+                    <LinearGradient colors={LOGO_RAINBOW} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={s.catRing}>
+                      <Image source={{ uri: item.image }} style={s.catImg} contentFit="cover" />
+                    </LinearGradient>
+                    <Text style={s.catName} numberOfLines={2}>{item.name}</Text>
+                  </Pressable>
+                );
+              }}
+            />
+          </View>
 
           {flash.length > 0 && (
             <>
@@ -207,8 +264,12 @@ const s = StyleSheet.create({
   bannerScrim: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0 },
   bannerText: { position: "absolute", left: spacing.lg, bottom: spacing.lg, gap: 4 },
   bannerCta: { marginTop: 8, backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, alignSelf: "flex-start" },
+  categorySection: { marginTop: spacing.xl, overflow: "hidden" },
+  categoryFadeTop: { position: "absolute", top: 0, left: 0, right: 0, height: 44 },
+  categoryFadeBottom: { position: "absolute", bottom: 0, left: 0, right: 0, height: 44 },
   catCard: { width: 80, alignItems: "center", gap: 8 },
-  catImg: { width: 68, height: 68, borderRadius: 34, backgroundColor: colors.surfaceTertiary },
-  catName: { fontSize: 12, color: colors.onSurface, textAlign: "center" },
+  catRing: { width: 72, height: 72, borderRadius: 36, padding: 3, alignItems: "center", justifyContent: "center" },
+  catImg: { width: 66, height: 66, borderRadius: 33, backgroundColor: colors.surfaceTertiary },
+  catName: { fontSize: 12, color: colors.onSurface, fontWeight: "500", textAlign: "center" },
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-start" },
 });
