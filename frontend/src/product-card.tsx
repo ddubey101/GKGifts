@@ -34,6 +34,10 @@ export function ProductCard({ product, width }: { product: any; width?: number }
   const runAdd = async (e: any) => {
     stop(e);
     if (busy) return;
+    if (product.variants?.length) {
+      router.push(`/product/${product.product_id}`);
+      return;
+    }
     setBusy(true);
     try {
       await addToCart(product.product_id, 1, null);

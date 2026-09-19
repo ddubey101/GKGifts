@@ -26,12 +26,27 @@ type Product = {
   stock: number;
   images: string[];
   tags?: string[];
-  variants?: { name: string; options: string[] }[];
+  variants?: VariantGroup[];
 };
 
 type Category = { category_id: string; name: string };
+type VariantType = "colour" | "character" | "pattern";
+type VariantGroup = { type: VariantType; options: string[] };
 
 const TAG_OPTIONS = ["flash_sale", "featured", "trending", "new", "deal", "top"];
+const VARIANT_TYPES: { type: VariantType; label: string }[] = [
+  { type: "colour", label: "Colour" },
+  { type: "character", label: "Character" },
+  { type: "pattern", label: "Pattern" },
+];
+
+function normalizeVariants(variants: any[] = []): VariantGroup[] {
+  return variants.flatMap((variant) => {
+    const type = String(variant?.type || variant?.name || "").toLowerCase() as VariantType;
+    if (!VARIANT_TYPES.some((item) => item.type === type)) return [];
+    return [{ type, options: Array.isArray(variant.options) ? variant.options : [] }];
+  });
+}
 
 const EMPTY_FORM: Product = {
   product_id: "",
@@ -80,7 +95,7 @@ export default function AdminProducts() {
   const openCreate = () => { setEditing({ ...EMPTY_FORM, category_ids: [] }); setModalOpen(true); };
   const openEdit = (p: Product) => {
     const categoryIds = p.category_ids?.length ? p.category_ids : (p.category_id ? [p.category_id] : []);
-    setEditing({ ...p, category_id: categoryIds[0] || "", category_ids: categoryIds, tags: p.tags || [], variants: p.variants || [] });
+    setEditing({ ...p, category_id: categoryIds[0] || "", category_ids: categoryIds, tags: p.tags || [], variants: normalizeVariants(p.variants) });
     setModalOpen(true);
   };
 
@@ -117,10 +132,21 @@ export default function AdminProducts() {
       stock: Number(editing.stock) || 0,
       images: editing.images.filter(Boolean),
       tags: editing.tags || [],
-      variants: editing.variants || [],
+      variants: normalizeVariants(editing.variants).map((variant) => ({
+        ...variant,
+        options: [...new Set(variant.options.map((option) => option.trim()).filter(Boolean))],
+      })),
     };
     if (!payload.name || !payload.brand || payload.price <= 0 || payload.category_ids.length === 0) {
       notify("Name, brand, price and at least one category are required");
+      return;
+    }
+    if (payload.variants.some((variant) => variant.options.length === 0)) {
+      notify("Add at least one option for every selected variant type");
+      return;
+    }
+    if (payload.variants.some((variant) => variant.options.some((option) => option.includes(":") || option.includes("/")))) {
+      notify("Variant options cannot contain : or /");
       return;
     }
     try {
@@ -320,6 +346,32 @@ function ProductForm({
       : [...selected, categoryId];
     onChange({ ...value, category_ids: next, category_id: next[0] || "" });
   };
+  const toggleVariantType = (type: VariantType) => {
+    const variants = normalizeVariants(value.variants);
+    const exists = variants.some((variant) => variant.type === type);
+    setField("variants", exists
+      ? variants.filter((variant) => variant.type !== type)
+      : [...variants, { type, options: [""] }]);
+  };
+  const updateVariantOption = (type: VariantType, index: number, option: string) => {
+    setField("variants", normalizeVariants(value.variants).map((variant) =>
+      variant.type === type
+        ? { ...variant, options: variant.options.map((current, i) => i === index ? option : current) }
+        : variant
+    ));
+  };
+  const addVariantOption = (type: VariantType) => {
+    setField("variants", normalizeVariants(value.variants).map((variant) =>
+      variant.type === type ? { ...variant, options: [...variant.options, ""] } : variant
+    ));
+  };
+  const removeVariantOption = (type: VariantType, index: number) => {
+    setField("variants", normalizeVariants(value.variants).map((variant) =>
+      variant.type === type
+        ? { ...variant, options: variant.options.filter((_, i) => i !== index) }
+        : variant
+    ));
+  };
 
   return (
     <View style={s.modalRoot}>
@@ -388,6 +440,46 @@ function ProductForm({
                 );
               })}
             </View>
+
+            <Text style={s.label}>Variants</Text>
+            <Text style={s.helperText}>Optional. Select every type this product offers.</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {VARIANT_TYPES.map(({ type, label }) => {
+                const active = normalizeVariants(value.variants).some((variant) => variant.type === type);
+                return (
+                  <Pressable key={type} testID={`form-variant-${type}`} onPress={() => toggleVariantType(type)} style={[s.chip, active && s.chipActive]}>
+                    <Text style={[s.chipText, active && s.chipTextActive]}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {normalizeVariants(value.variants).map((variant) => {
+              const label = VARIANT_TYPES.find((item) => item.type === variant.type)?.label || variant.type;
+              return (
+                <View key={variant.type} style={s.variantGroup}>
+                  <Text style={s.variantTitle}>{label} options</Text>
+                  {variant.options.map((option, index) => (
+                    <View key={`${variant.type}-${index}`} style={s.optionRow}>
+                      <TextInput
+                        testID={`form-variant-${variant.type}-${index}`}
+                        value={option}
+                        onChangeText={(text) => updateVariantOption(variant.type, index, text)}
+                        placeholder={`e.g. ${variant.type === "colour" ? "Red" : variant.type === "character" ? "Unicorn" : "Floral"}`}
+                        placeholderTextColor={colors.onSurfaceMuted}
+                        style={[s.input, { flex: 1 }]}
+                      />
+                      <Pressable testID={`form-variant-${variant.type}-delete-${index}`} onPress={() => removeVariantOption(variant.type, index)} style={s.optionDelete}>
+                        <Ionicons name="trash-outline" size={17} color={colors.error} />
+                      </Pressable>
+                    </View>
+                  ))}
+                  <Pressable testID={`form-variant-${variant.type}-add`} onPress={() => addVariantOption(variant.type)} style={s.addBtn}>
+                    <Ionicons name="add" size={16} color={colors.brandPrimary} />
+                    <Text style={{ color: colors.brandPrimary, fontWeight: "500" }}>Add {label.toLowerCase()}</Text>
+                  </Pressable>
+                </View>
+              );
+            })}
 
             <View style={s.imageHeading}>
               <Text style={[s.label, { marginBottom: 0 }]}>Images</Text>
@@ -532,6 +624,16 @@ const s = StyleSheet.create({
   chipTextActive: { color: colors.onBrand, fontWeight: "500" },
   addBtn: {
     flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, alignSelf: "flex-start",
+  },
+  variantGroup: {
+    gap: 8, padding: spacing.md, borderWidth: 1, borderColor: colors.border,
+    borderRadius: radius.sm, backgroundColor: colors.surfaceSecondary,
+  },
+  variantTitle: { color: colors.onSurface, fontWeight: "600", fontSize: 13 },
+  optionRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  optionDelete: {
+    width: 38, height: 38, alignItems: "center", justifyContent: "center",
+    borderRadius: radius.sm, backgroundColor: colors.surfaceTertiary,
   },
   imageHeading: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
