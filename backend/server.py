@@ -11,7 +11,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 
 import bcrypt
 import httpx
@@ -22,7 +22,7 @@ from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRouter
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from starlette.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 
@@ -203,6 +203,21 @@ class VisitorTrackIn(BaseModel):
     visitor_id: str = Field(min_length=16, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
 
 
+class VariantGroup(BaseModel):
+    type: Literal["colour", "character", "pattern"]
+    options: List[str]
+
+    @field_validator("options")
+    @classmethod
+    def validate_options(cls, options: List[str]) -> List[str]:
+        cleaned = list(dict.fromkeys(option.strip() for option in options if option.strip()))
+        if not cleaned:
+            raise ValueError("Each variant type needs at least one option")
+        if any(":" in option or "/" in option for option in cleaned):
+            raise ValueError("Variant options cannot contain ':' or '/'")
+        return cleaned
+
+
 class ProductIn(BaseModel):
     name: str
     brand: str
@@ -214,7 +229,7 @@ class ProductIn(BaseModel):
     images: List[str] = []
     stock: int = 100
     tags: List[str] = []
-    variants: List[dict] = []
+    variants: List[VariantGroup] = Field(default_factory=list)
     rating: float = 0
     review_count: int = 0
 
@@ -230,7 +245,7 @@ class ProductPatchIn(BaseModel):
     images: Optional[List[str]] = None
     stock: Optional[int] = None
     tags: Optional[List[str]] = None
-    variants: Optional[List[dict]] = None
+    variants: Optional[List[VariantGroup]] = None
 
 
 class StockPatchIn(BaseModel):
@@ -458,6 +473,57 @@ async def _get_cart(uid: str) -> dict:
     return cart
 
 
+VARIANT_LABELS = {
+    "colour": "Colour",
+    "character": "Character",
+    "pattern": "Pattern",
+}
+
+
+def _normalize_variants(variants: list[Any]) -> list[dict]:
+    normalized = []
+    seen = set()
+    for raw in variants or []:
+        item = raw.model_dump() if isinstance(raw, BaseModel) else raw
+        if not isinstance(item, dict):
+            continue
+        variant_type = str(item.get("type") or item.get("name") or "").strip().lower()
+        if variant_type not in VARIANT_LABELS or variant_type in seen:
+            raise HTTPException(400, "Variant types must be unique and use Colour, Character, or Pattern")
+        options = list(dict.fromkeys(
+            str(option).strip() for option in item.get("options", []) if str(option).strip()
+        ))
+        if not options:
+            raise HTTPException(400, f"{VARIANT_LABELS[variant_type]} needs at least one option")
+        if any(":" in option or "/" in option for option in options):
+            raise HTTPException(400, "Variant options cannot contain ':' or '/'")
+        normalized.append({"type": variant_type, "options": options})
+        seen.add(variant_type)
+    return normalized
+
+
+def _validate_variant_selection(product: dict, selection: Optional[str]) -> Optional[str]:
+    groups = _normalize_variants(product.get("variants") or [])
+    if not groups:
+        return selection
+    if not selection:
+        raise HTTPException(400, "Choose a variant before adding this product")
+    parts = selection.split(" / ")
+    if len(parts) != len(groups):
+        raise HTTPException(400, "Choose one option for every variant type")
+    canonical = []
+    for group, part in zip(groups, parts):
+        label = VARIANT_LABELS[group["type"]]
+        prefix = f"{label}: "
+        if not part.startswith(prefix):
+            raise HTTPException(400, f"Choose a valid {label.lower()}")
+        option = part[len(prefix):].strip()
+        if option not in group["options"]:
+            raise HTTPException(400, f"Choose a valid {label.lower()}")
+        canonical.append(f"{label}: {option}")
+    return " / ".join(canonical)
+
+
 async def _hydrate_cart(cart: dict) -> dict:
     raw_items = cart.get("items", [])
     if not raw_items:
@@ -514,13 +580,17 @@ async def _require_stock(product_id: str, requested: int) -> dict:
 async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
     if body.quantity <= 0:
         raise HTTPException(400, "Quantity must be greater than zero")
+    product = await db.products.find_one({"product_id": body.product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(404, "Product not found")
+    selected_variant = _validate_variant_selection(product, body.variant)
     cart = await _get_cart(user["user_id"])
     items = cart["items"]
     existing = next(
         (
             item for item in items
             if item["product_id"] == body.product_id
-            and item.get("variant") == body.variant
+            and item.get("variant") == selected_variant
         ),
         None,
     )
@@ -533,7 +603,7 @@ async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
     if existing:
         existing["quantity"] = int(existing.get("quantity", 0)) + body.quantity
     else:
-        items.append(body.model_dump())
+        items.append({**body.model_dump(), "variant": selected_variant})
     await db.carts.update_one(
         {"user_id": user["user_id"]},
         {"$set": {"items": items, "updated_at": now_utc()}},
@@ -545,12 +615,18 @@ async def cart_add(body: CartItemIn, user: dict = Depends(current_user)):
 async def cart_update(body: CartItemIn, user: dict = Depends(current_user)):
     if body.quantity < 0:
         raise HTTPException(400, "Quantity cannot be negative")
+    product = await db.products.find_one({"product_id": body.product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(404, "Product not found")
+    selected_variant = body.variant
+    if body.quantity > 0:
+        selected_variant = _validate_variant_selection(product, body.variant)
     cart = await _get_cart(user["user_id"])
     items = [
         item for item in cart["items"]
         if not (
             item["product_id"] == body.product_id
-            and item.get("variant") == body.variant
+            and item.get("variant") == selected_variant
         )
     ]
     if body.quantity > 0:
@@ -560,7 +636,7 @@ async def cart_update(body: CartItemIn, user: dict = Depends(current_user)):
             if item["product_id"] == body.product_id
         )
         await _require_stock(body.product_id, requested)
-        items.append(body.model_dump())
+        items.append({**body.model_dump(), "variant": selected_variant})
     await db.carts.update_one(
         {"user_id": user["user_id"]},
         {"$set": {"items": items, "updated_at": now_utc()}},
@@ -689,6 +765,8 @@ async def checkout(body: CheckoutIn, user: dict = Depends(current_user)):
     cart = await _hydrate_cart(await _get_cart(user["user_id"]))
     if not cart["items"]:
         raise HTTPException(400, "Cart is empty")
+    for item in cart["items"]:
+        item["variant"] = _validate_variant_selection(item["product"], item.get("variant"))
     addr = await db.addresses.find_one(
         {"address_id": body.address_id, "user_id": user["user_id"]}, {"_id": 0}
     )
@@ -943,6 +1021,7 @@ async def admin_product_create(body: ProductIn, _: dict = Depends(require_admin)
         raise HTTPException(400, "At least one category is required")
     product_data["category_ids"] = category_ids
     product_data["category_id"] = category_ids[0]
+    product_data["variants"] = _normalize_variants(product_data.get("variants") or [])
     doc = {"product_id": pid, **product_data, "created_at": now_utc()}
     await db.products.insert_one(dict(doc))
     return _strip(doc)
@@ -1064,6 +1143,8 @@ async def admin_product_update(
         updates["category_id"] = category_ids[0]
     elif "category_id" in updates:
         updates["category_ids"] = [updates["category_id"]]
+    if "variants" in updates:
+        updates["variants"] = _normalize_variants(updates["variants"])
     if not updates:
         raise HTTPException(400, "No fields to update")
     previous = await db.products.find_one({"product_id": product_id}, {"_id": 0})

@@ -20,7 +20,7 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const [p, setP] = useState<any>(null);
   const [gi, setGi] = useState(0);
-  const [variant, setVariant] = useState<string | null>(null);
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState("");
   const [notifySaved, setNotifySaved] = useState(false);
@@ -29,17 +29,32 @@ export default function ProductDetail() {
     try {
       const r = await api<any>(`/products/${id}`, { auth: false });
       setP(r);
-      if (r.variants?.[0]?.options?.[0]) setVariant(r.variants[0].options[0]);
+      setSelectedVariants({});
     } catch {}
   }, [id]);
   useEffect(() => { load(); }, [load]);
 
   if (!p) return <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} />;
 
+  const variantGroups = (p.variants || []).map((group: any) => ({
+    ...group,
+    type: String(group.type || group.name || "").toLowerCase(),
+    label: String(group.type || group.name || "").replace(/^./, (letter) => letter.toUpperCase()),
+  })).filter((group: any) => group.type && Array.isArray(group.options) && group.options.length > 0);
+  const allVariantsChosen = variantGroups.length === 0 || variantGroups.every((group: any) => selectedVariants[group.type]);
+  const variantLabel = variantGroups.length === 0 ? null : variantGroups
+    .map((group: any) => `${group.label}: ${selectedVariants[group.type]}`)
+    .join(" / ");
+
   const add = async () => {
+    if (!allVariantsChosen) {
+      setToast("Please choose every variant");
+      setTimeout(() => setToast(""), 1800);
+      return;
+    }
     setBusy(true);
     try {
-      await addToCart(p.product_id, 1, variant);
+      await addToCart(p.product_id, 1, variantLabel);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setToast("Added to cart");
       setTimeout(() => setToast(""), 1600);
@@ -104,14 +119,14 @@ export default function ProductDetail() {
           <Rating value={p.rating || 0} count={p.review_count} />
           <View style={{ marginTop: 8 }}><Price price={p.price} mrp={p.mrp} size={22} /></View>
 
-          {p.variants?.map((v: any) => (
-            <View key={v.name} style={{ marginTop: spacing.md }}>
-              <Text style={s.varLabel}>{v.name}</Text>
+          {variantGroups.map((v: any) => (
+            <View key={v.type} style={{ marginTop: spacing.md }}>
+              <Text style={s.varLabel}>{v.label}</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
                 {v.options.map((opt: string) => {
-                  const active = variant === opt;
+                  const active = selectedVariants[v.type] === opt;
                   return (
-                    <Pressable key={opt} testID={`variant-${opt}`} onPress={() => { setVariant(opt); Haptics.selectionAsync().catch(() => {}); }} style={[s.varOpt, active && s.varOptActive]}>
+                    <Pressable key={opt} testID={`variant-${v.type}-${opt}`} onPress={() => { setSelectedVariants((current) => ({ ...current, [v.type]: opt })); Haptics.selectionAsync().catch(() => {}); }} style={[s.varOpt, active && s.varOptActive]}>
                       <Text style={[s.varTxt, active && s.varTxtActive]}>{opt}</Text>
                     </Pressable>
                   );
@@ -154,10 +169,10 @@ export default function ProductDetail() {
         </View>
         <Button
           testID={outOfStock ? "notify-me" : "add-to-cart"}
-          title={outOfStock ? (notifySaved ? "Notification saved" : "Notify me") : "Add to Cart"}
+          title={outOfStock ? (notifySaved ? "Notification saved" : "Notify me") : allVariantsChosen ? "Add to Cart" : "Choose variants"}
           onPress={outOfStock ? notify : add}
           loading={busy}
-          disabled={notifySaved}
+          disabled={notifySaved || (!outOfStock && !allVariantsChosen)}
           variant={outOfStock ? "secondary" : "primary"}
           style={{ paddingHorizontal: 32 }}
         />
