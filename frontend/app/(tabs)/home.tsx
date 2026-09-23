@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  FlatList, Image as RNImage, NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
+  Animated, FlatList, NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -16,6 +16,7 @@ import { trackVisitor } from "@/src/visitor";
 
 const LOGO_RAINBOW = ["#08CBE5", "#0078E8", "#6812E4", "#ED087D", "#F52B08", "#FFCE05"] as const;
 const LOGO_RAINBOW_FADE = ["rgba(8,203,229,0.25)", "rgba(0,120,232,0.25)", "rgba(104,18,228,0.25)", "rgba(237,8,125,0.25)", "rgba(245,43,8,0.25)", "rgba(255,206,5,0.25)"] as const;
+const BULK_ORDER_TICKER = "We accept bulk orders for Birthday, Wedding, Naming Ceremony, Baby Shower, Corporate Gifts, Navratri Kanya Pooja Gifts";
 
 export default function Home() {
   const router = useRouter();
@@ -33,6 +34,9 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const bannerListRef = useRef<FlatList<any>>(null);
   const bannerIndexRef = useRef(0);
+  const tickerPosition = useRef(new Animated.Value(0)).current;
+  const [tickerWidth, setTickerWidth] = useState(0);
+  const [tickerTextWidth, setTickerTextWidth] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -64,6 +68,21 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [banners.length, bannerWidth]);
+  useEffect(() => {
+    if (!tickerWidth || !tickerTextWidth) return;
+
+    tickerPosition.setValue(tickerWidth);
+    const animation = Animated.loop(
+      Animated.timing(tickerPosition, {
+        toValue: -tickerTextWidth,
+        duration: Math.max(12000, (tickerWidth + tickerTextWidth) * 18),
+        easing: (value) => value,
+        useNativeDriver: true,
+      }),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [tickerPosition, tickerTextWidth, tickerWidth]);
 
   const onBannerScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const itemWidth = bannerWidth + spacing.md;
@@ -79,36 +98,40 @@ export default function Home() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
       <View style={[s.centerRow, { paddingHorizontal: hPad, backgroundColor: colors.surface }]}>
         <View style={[s.headerInner, { maxWidth: contentMax }]}>
-          <Pressable testID="home-logo" onPress={() => router.push("/(tabs)/home")} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <RNImage
-              source={require("../../assets/images/gk-logo.png")}
-              style={{ width: 36, height: 36 }}
-              resizeMode="contain"
-            />
-            <View>
-              <Text style={{ color: colors.onSurfaceMuted, fontSize: 12 }}>Hello,</Text>
-              <Text style={{ ...typography.h3, color: colors.onSurface }}>{user?.name || "Shopper"}</Text>
-            </View>
-          </Pressable>
-          {user ? (
-            <View style={{ flexDirection: "row", gap: 8 }}>
+          <View
+            testID="bulk-order-ticker"
+            style={s.ticker}
+            onLayout={(event) => setTickerWidth(event.nativeEvent.layout.width)}
+          >
+            <Animated.Text
+              numberOfLines={1}
+              onLayout={(event) => setTickerTextWidth(event.nativeEvent.layout.width)}
+              style={[s.tickerText, { transform: [{ translateX: tickerPosition }] }]}
+            >
+              {BULK_ORDER_TICKER}
+            </Animated.Text>
+          </View>
+          <View style={s.headerActions}>
+            {user ? (
+              <View style={{ flexDirection: "row", gap: 8 }}>
               <Pressable testID="header-notifications" onPress={() => router.push("/notifications")} style={s.headerBtn}>
                 <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
               </Pressable>
               <Pressable testID="header-wishlist" onPress={() => router.push("/wishlist")} style={s.headerBtn}>
                 <Ionicons name="heart-outline" size={20} color={colors.onSurface} />
               </Pressable>
-            </View>
-          ) : (
-            <Pressable
-              testID="header-sign-in"
-              onPress={() => router.push("/(auth)/login")}
-              style={s.signInBtn}
-            >
-              <Ionicons name="person-outline" size={16} color={colors.brandPrimary} />
-              <Text style={s.signInText}>Sign in</Text>
-            </Pressable>
-          )}
+              </View>
+            ) : (
+              <Pressable
+                testID="header-sign-in"
+                onPress={() => router.push("/(auth)/login")}
+                style={s.signInBtn}
+              >
+                <Ionicons name="person-outline" size={16} color={colors.brandPrimary} />
+                <Text style={s.signInText}>Sign in</Text>
+              </Pressable>
+            )}
+          </View>
         </View>
       </View>
 
@@ -253,9 +276,11 @@ function SectionHeader({ title, subtitle, hPad }: { title: string; subtitle?: st
 const s = StyleSheet.create({
   centerRow: { alignItems: "center" },
   headerInner: {
-    width: "100%", flexDirection: "row", justifyContent: "space-between",
-    alignItems: "center", paddingVertical: spacing.md,
+    width: "100%", height: 40, justifyContent: "center", marginVertical: spacing.md,
   },
+  ticker: { width: "100%", height: 40, justifyContent: "center", overflow: "hidden", backgroundColor: "#F5A8BC" },
+  tickerText: { position: "absolute", color: colors.onBrand, fontSize: 14, fontWeight: "600" },
+  headerActions: { position: "absolute", right: 0, top: 0, height: 40, justifyContent: "center" },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
   signInBtn: { height: 40, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.brandPrimary },
   signInText: { color: colors.brandPrimary, fontWeight: "500" },
