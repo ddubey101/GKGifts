@@ -35,7 +35,6 @@ export default function Home() {
   const bannerListRef = useRef<FlatList<any>>(null);
   const bannerIndexRef = useRef(0);
   const tickerPosition = useRef(new Animated.Value(0)).current;
-  const [tickerWidth, setTickerWidth] = useState(0);
   const [tickerTextWidth, setTickerTextWidth] = useState(0);
 
   const load = useCallback(async () => {
@@ -69,20 +68,20 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [banners.length, bannerWidth]);
   useEffect(() => {
-    if (!tickerWidth || !tickerTextWidth) return;
+    if (!tickerTextWidth) return;
 
-    tickerPosition.setValue(tickerWidth);
+    tickerPosition.setValue(0);
     const animation = Animated.loop(
       Animated.timing(tickerPosition, {
-        toValue: -tickerTextWidth,
-        duration: Math.max(12000, (tickerWidth + tickerTextWidth) * 18),
+        toValue: -(tickerTextWidth + spacing.xxl),
+        duration: Math.max(12000, (tickerTextWidth + spacing.xxl) * 18),
         easing: (value) => value,
         useNativeDriver: true,
       }),
     );
     animation.start();
     return () => animation.stop();
-  }, [tickerPosition, tickerTextWidth, tickerWidth]);
+  }, [tickerPosition, tickerTextWidth]);
 
   const onBannerScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const itemWidth = bannerWidth + spacing.md;
@@ -96,20 +95,30 @@ export default function Home() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-      <View style={[s.centerRow, { paddingHorizontal: hPad, backgroundColor: colors.surface }]}>
+      <LinearGradient
+        colors={["#F5A8BC", "#F5A8BC", colors.surface]}
+        locations={[0, 0.58, 1]}
+        style={[s.centerRow, { paddingHorizontal: hPad }]}
+      >
         <View style={[s.headerInner, { maxWidth: contentMax }]}>
           <View
             testID="bulk-order-ticker"
             style={s.ticker}
-            onLayout={(event) => setTickerWidth(event.nativeEvent.layout.width)}
           >
-            <Animated.Text
-              numberOfLines={1}
-              onLayout={(event) => setTickerTextWidth(event.nativeEvent.layout.width)}
-              style={[s.tickerText, { transform: [{ translateX: tickerPosition }] }]}
+            <Animated.View
+              style={[s.tickerTrack, { transform: [{ translateX: tickerPosition }] }]}
             >
-              {BULK_ORDER_TICKER}
-            </Animated.Text>
+              <Text
+                numberOfLines={1}
+                onLayout={(event) => setTickerTextWidth(event.nativeEvent.layout.width)}
+                style={s.tickerText}
+              >
+                {BULK_ORDER_TICKER}
+              </Text>
+              <Text numberOfLines={1} style={[s.tickerText, s.tickerRepeat]}>
+                {BULK_ORDER_TICKER}
+              </Text>
+            </Animated.View>
           </View>
           <View style={s.headerActions}>
             {user ? (
@@ -133,7 +142,7 @@ export default function Home() {
             )}
           </View>
         </View>
-      </View>
+      </LinearGradient>
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: spacing.xxxl, alignItems: "center" }}
@@ -276,10 +285,12 @@ function SectionHeader({ title, subtitle, hPad }: { title: string; subtitle?: st
 const s = StyleSheet.create({
   centerRow: { alignItems: "center" },
   headerInner: {
-    width: "100%", height: 40, justifyContent: "center", marginVertical: spacing.md,
+    width: "100%", height: 40, justifyContent: "center", marginTop: spacing.md, marginBottom: spacing.xl,
   },
-  ticker: { width: "100%", height: 40, justifyContent: "center", overflow: "hidden", backgroundColor: "#F5A8BC" },
-  tickerText: { position: "absolute", color: colors.onBrand, fontSize: 14, fontWeight: "600" },
+  ticker: { width: "100%", height: 40, justifyContent: "center", overflow: "hidden" },
+  tickerTrack: { position: "absolute", left: "100%", flexDirection: "row", alignItems: "center" },
+  tickerText: { color: colors.onBrand, fontSize: 14, fontWeight: "600", flexShrink: 0 },
+  tickerRepeat: { marginLeft: spacing.xxl },
   headerActions: { position: "absolute", right: 0, top: 0, height: 40, justifyContent: "center" },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
   signInBtn: { height: 40, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.brandPrimary },
