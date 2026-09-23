@@ -287,7 +287,7 @@ const s = StyleSheet.create({
   headerInner: {
     width: "100%", height: 40, justifyContent: "center", marginTop: spacing.md, marginBottom: spacing.xl,
   },
-  ticker: { width: "100%", height: 40, justifyContent: "center", overflow: "hidden" },
+  ticker: { width: "100%", height: 40, justifyContent: "center", overflow: "hidden", borderRadius: radius.md },
   tickerTrack: { position: "absolute", left: "100%", flexDirection: "row", alignItems: "center" },
   tickerText: { color: colors.onBrand, fontSize: 14, fontWeight: "600", flexShrink: 0 },
   tickerRepeat: { marginLeft: spacing.xxl },
