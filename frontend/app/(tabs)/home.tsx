@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Animated, FlatList, NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
+  Animated, Easing, FlatList, NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -70,17 +70,28 @@ export default function Home() {
   useEffect(() => {
     if (!tickerTextWidth) return;
 
-    tickerPosition.setValue(0);
-    const animation = Animated.loop(
-      Animated.timing(tickerPosition, {
+    let cancelled = false;
+    let animation: Animated.CompositeAnimation | undefined;
+
+    const runTicker = () => {
+      if (cancelled) return;
+      tickerPosition.setValue(0);
+      animation = Animated.timing(tickerPosition, {
         toValue: -(tickerTextWidth + spacing.xxl),
         duration: Math.max(12000, (tickerTextWidth + spacing.xxl) * 18),
-        easing: (value) => value,
+        easing: Easing.linear,
         useNativeDriver: true,
-      }),
-    );
-    animation.start();
-    return () => animation.stop();
+      });
+      animation.start(({ finished }) => {
+        if (finished && !cancelled) runTicker();
+      });
+    };
+
+    runTicker();
+    return () => {
+      cancelled = true;
+      animation?.stop();
+    };
   }, [tickerPosition, tickerTextWidth]);
 
   const onBannerScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
