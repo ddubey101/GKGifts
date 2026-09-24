@@ -70,27 +70,21 @@ export default function Home() {
   useEffect(() => {
     if (!tickerTextWidth) return;
 
-    let cancelled = false;
-    let animation: Animated.CompositeAnimation | undefined;
-
-    const runTicker = () => {
-      if (cancelled) return;
-      tickerPosition.setValue(0);
-      animation = Animated.timing(tickerPosition, {
-        toValue: -(tickerTextWidth + spacing.xxl),
-        duration: Math.max(12000, (tickerTextWidth + spacing.xxl) * 18),
+    tickerPosition.setValue(0);
+    const animation = Animated.loop(
+      Animated.timing(tickerPosition, {
+        toValue: -tickerTextWidth,
+        duration: Math.max(12000, tickerTextWidth * 18),
         easing: Easing.linear,
         useNativeDriver: true,
-      });
-      animation.start(({ finished }) => {
-        if (finished && !cancelled) runTicker();
-      });
-    };
-
-    runTicker();
+        isInteraction: false,
+      }),
+      { resetBeforeIteration: true },
+    );
+    animation.start();
     return () => {
-      cancelled = true;
-      animation?.stop();
+      animation.stop();
+      tickerPosition.setValue(0);
     };
   }, [tickerPosition, tickerTextWidth]);
 
@@ -119,16 +113,19 @@ export default function Home() {
             <Animated.View
               style={[s.tickerTrack, { transform: [{ translateX: tickerPosition }] }]}
             >
-              <Text
-                numberOfLines={1}
+              <View
                 onLayout={(event) => setTickerTextWidth(event.nativeEvent.layout.width)}
-                style={s.tickerText}
+                style={s.tickerItem}
               >
-                {BULK_ORDER_TICKER}
-              </Text>
-              <Text numberOfLines={1} style={[s.tickerText, s.tickerRepeat]}>
-                {BULK_ORDER_TICKER}
-              </Text>
+                <Text numberOfLines={1} style={s.tickerText}>
+                  {BULK_ORDER_TICKER}
+                </Text>
+              </View>
+              <View style={s.tickerItem}>
+                <Text numberOfLines={1} style={s.tickerText}>
+                  {BULK_ORDER_TICKER}
+                </Text>
+              </View>
             </Animated.View>
           </View>
           <View style={s.headerActions}>
@@ -299,9 +296,9 @@ const s = StyleSheet.create({
     width: "100%", height: 40, justifyContent: "center", marginTop: spacing.md, marginBottom: spacing.xl,
   },
   ticker: { width: "100%", height: 40, justifyContent: "center", overflow: "hidden", borderRadius: radius.md },
-  tickerTrack: { position: "absolute", left: "100%", flexDirection: "row", alignItems: "center" },
+  tickerTrack: { position: "absolute", left: 0, flexDirection: "row", alignItems: "center" },
+  tickerItem: { flexShrink: 0, paddingRight: spacing.xxl },
   tickerText: { color: colors.onBrand, fontSize: 14, fontWeight: "600", flexShrink: 0 },
-  tickerRepeat: { marginLeft: spacing.xxl },
   headerActions: { position: "absolute", right: 0, top: 0, height: 40, justifyContent: "center" },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
   signInBtn: { height: 40, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.brandPrimary },
