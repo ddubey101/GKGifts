@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Animated, Easing, FlatList, NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
+  Animated, FlatList, NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -71,19 +71,22 @@ export default function Home() {
     if (!tickerTextWidth) return;
 
     tickerPosition.setValue(0);
-    const animation = Animated.loop(
-      Animated.timing(tickerPosition, {
-        toValue: -tickerTextWidth,
-        duration: Math.max(12000, tickerTextWidth * 18),
-        easing: Easing.linear,
-        useNativeDriver: true,
-        isInteraction: false,
-      }),
-      { resetBeforeIteration: true },
-    );
-    animation.start();
+    const pixelsPerSecond = 1000 / 18;
+    const startedAt = Date.now();
+    let frameId: ReturnType<typeof requestAnimationFrame>;
+    let active = true;
+
+    const moveTicker = () => {
+      if (!active) return;
+      const distance = ((Date.now() - startedAt) / 1000) * pixelsPerSecond;
+      tickerPosition.setValue(-(distance % tickerTextWidth));
+      frameId = requestAnimationFrame(moveTicker);
+    };
+
+    frameId = requestAnimationFrame(moveTicker);
     return () => {
-      animation.stop();
+      active = false;
+      cancelAnimationFrame(frameId);
       tickerPosition.setValue(0);
     };
   }, [tickerPosition, tickerTextWidth]);
