@@ -14,7 +14,6 @@ import { ProductCard } from "@/src/product-card";
 import { useResponsiveCols } from "@/src/use-responsive-cols";
 import { trackVisitor } from "@/src/visitor";
 
-const LOGO_RAINBOW = ["#08CBE5", "#0078E8", "#6812E4", "#ED087D", "#F52B08", "#FFCE05"] as const;
 const LOGO_RAINBOW_FADE = ["rgba(8,203,229,0.25)", "rgba(0,120,232,0.25)", "rgba(104,18,228,0.25)", "rgba(237,8,125,0.25)", "rgba(245,43,8,0.25)", "rgba(255,206,5,0.25)"] as const;
 const BULK_ORDER_TICKER = "We accept bulk orders for Birthday, Wedding, Naming Ceremony, Baby Shower, Corporate Gifts, Navratri Kanya Pooja Gifts";
 
@@ -228,9 +227,7 @@ export default function Home() {
               renderItem={({ item }) => {
                 return (
                   <Pressable testID={`category-${item.category_id}`} onPress={() => router.push(`/category/${item.category_id}`)} style={s.catCard}>
-                    <LinearGradient colors={LOGO_RAINBOW} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={s.catRing}>
-                      <Image source={{ uri: item.image }} style={s.catImg} contentFit="cover" />
-                    </LinearGradient>
+                    <Image source={{ uri: item.image }} style={s.catImg} contentFit="cover" />
                     <Text style={s.catName} numberOfLines={2}>{item.name}</Text>
                   </Pressable>
                 );
@@ -315,8 +312,7 @@ const s = StyleSheet.create({
   categoryFadeTop: { position: "absolute", top: 0, left: 0, right: 0, height: 44 },
   categoryFadeBottom: { position: "absolute", bottom: 0, left: 0, right: 0, height: 44 },
   catCard: { width: 80, alignItems: "center", gap: 8 },
-  catRing: { width: 72, height: 72, borderRadius: 36, padding: 3, alignItems: "center", justifyContent: "center" },
-  catImg: { width: 66, height: 66, borderRadius: 33, backgroundColor: colors.surfaceTertiary },
+  catImg: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.surfaceTertiary },
   catName: { fontSize: 12, color: colors.onSurface, fontWeight: "500", textAlign: "center" },
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-start" },
 });
