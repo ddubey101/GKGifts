@@ -253,6 +253,66 @@ class StockPatchIn(BaseModel):
     delta: Optional[int] = None   # relative +/-
 
 
+class BannerIn(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
+    subtitle: str = Field(default="", max_length=200)
+    image: str = Field(min_length=1, max_length=2000)
+    cta: str = Field(min_length=1, max_length=50)
+    link: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_-]+$")
+    order: int = Field(ge=0, le=10000)
+
+    @field_validator("title", "image", "cta", "link")
+    @classmethod
+    def trim_banner_text(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Field cannot be blank")
+        return cleaned
+
+    @field_validator("subtitle")
+    @classmethod
+    def trim_banner_subtitle(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("image")
+    @classmethod
+    def validate_banner_image(cls, value: str) -> str:
+        if not value.startswith(("https://", "http://")):
+            raise ValueError("Image must be an HTTP or HTTPS URL")
+        return value
+
+
+class BannerPatchIn(BaseModel):
+    title: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    subtitle: Optional[str] = Field(default=None, max_length=200)
+    image: Optional[str] = Field(default=None, min_length=1, max_length=2000)
+    cta: Optional[str] = Field(default=None, min_length=1, max_length=50)
+    link: Optional[str] = Field(default=None, min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_-]+$")
+    order: Optional[int] = Field(default=None, ge=0, le=10000)
+
+    @field_validator("title", "image", "cta", "link")
+    @classmethod
+    def trim_banner_text(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Field cannot be blank")
+        return cleaned
+
+    @field_validator("subtitle")
+    @classmethod
+    def trim_banner_subtitle(cls, value: Optional[str]) -> Optional[str]:
+        return value.strip() if value is not None else value
+
+    @field_validator("image")
+    @classmethod
+    def validate_banner_image(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and not value.startswith(("https://", "http://")):
+            raise ValueError("Image must be an HTTP or HTTPS URL")
+        return value
+
+
 # ---------- auth ------------------------------------------------------------
 
 @api.post("/auth/register")
@@ -967,6 +1027,50 @@ async def admin_orders(_: dict = Depends(require_admin)):
     return await db.orders.find({}, {"_id": 0}).sort("created_at", -1).limit(200).to_list(200)
 
 
+async def _require_banner_category(category_id: str) -> None:
+    if not await db.categories.find_one({"category_id": category_id}, {"_id": 1}):
+        raise HTTPException(400, "Destination category does not exist")
+
+
+@api.get("/admin/banners")
+async def admin_banner_list(_: dict = Depends(require_admin)):
+    return await db.banners.find({}, {"_id": 0}).sort([("order", 1), ("banner_id", 1)]).to_list(200)
+
+
+@api.post("/admin/banners")
+async def admin_banner_create(body: BannerIn, _: dict = Depends(require_admin)):
+    data = body.model_dump()
+    await _require_banner_category(data["link"])
+    now = now_utc()
+    doc = {"banner_id": new_id("bn"), **data, "created_at": now, "updated_at": now}
+    await db.banners.insert_one(dict(doc))
+    return _strip(doc)
+
+
+@api.patch("/admin/banners/{banner_id}")
+async def admin_banner_update(
+    banner_id: str, body: BannerPatchIn, _: dict = Depends(require_admin)
+):
+    updates = {key: value for key, value in body.model_dump().items() if value is not None}
+    if not updates:
+        raise HTTPException(400, "No fields to update")
+    if "link" in updates:
+        await _require_banner_category(updates["link"])
+    updates["updated_at"] = now_utc()
+    result = await db.banners.update_one({"banner_id": banner_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Banner not found")
+    return await db.banners.find_one({"banner_id": banner_id}, {"_id": 0})
+
+
+@api.delete("/admin/banners/{banner_id}")
+async def admin_banner_delete(banner_id: str, _: dict = Depends(require_admin)):
+    result = await db.banners.delete_one({"banner_id": banner_id})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Banner not found")
+    return {"ok": True, "banner_id": banner_id}
+
+
 @api.get("/admin/orders/{order_id}")
 async def admin_order_get(order_id: str, _: dict = Depends(require_admin)):
     order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
@@ -1237,6 +1341,7 @@ async def startup():
     await db.user_sessions.create_index("expires_at", expireAfterSeconds=0)
     await db.products.create_index("product_id", unique=True)
     await db.categories.create_index("category_id", unique=True)
+    await db.banners.create_index("banner_id", unique=True)
     await db.orders.create_index("order_id", unique=True)
     await db.visitor_information.create_index("visitor_id", unique=True)
     await db.restock_notifications.create_index(

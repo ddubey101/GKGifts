@@ -98,6 +98,48 @@ def test_banners(session):
     assert len(r.json()) >= 3
 
 
+def test_admin_banner_crud_and_validation(session, admin_token, demo_token):
+    categories = session.get(f"{API}/categories").json()
+    category_id = categories[0]["category_id"]
+    payload = {
+        "title": "TEST Banner",
+        "subtitle": "Temporary regression banner",
+        "image": "https://example.com/banner.jpg",
+        "cta": "Shop now",
+        "link": category_id,
+        "order": 9999,
+    }
+
+    forbidden = session.post(f"{API}/admin/banners", json=payload, headers=auth(demo_token))
+    assert forbidden.status_code == 403
+
+    invalid = session.post(
+        f"{API}/admin/banners",
+        json={**payload, "image": "javascript:alert(1)"},
+        headers=auth(admin_token),
+    )
+    assert invalid.status_code == 422
+
+    created = session.post(f"{API}/admin/banners", json=payload, headers=auth(admin_token))
+    assert created.status_code == 200, created.text
+    banner_id = created.json()["banner_id"]
+    try:
+        updated = session.patch(
+            f"{API}/admin/banners/{banner_id}",
+            json={"title": "TEST Banner Updated", "order": 9998},
+            headers=auth(admin_token),
+        )
+        assert updated.status_code == 200, updated.text
+        assert updated.json()["title"] == "TEST Banner Updated"
+
+        listed = session.get(f"{API}/admin/banners", headers=auth(admin_token))
+        assert listed.status_code == 200
+        assert any(item["banner_id"] == banner_id for item in listed.json())
+    finally:
+        deleted = session.delete(f"{API}/admin/banners/{banner_id}", headers=auth(admin_token))
+        assert deleted.status_code == 200, deleted.text
+
+
 def test_products_list_and_filter(session):
     r = session.get(f"{API}/products")
     assert r.status_code == 200
