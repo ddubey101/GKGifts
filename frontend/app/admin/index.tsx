@@ -81,6 +81,21 @@ export default function Admin() {
             <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceMuted} />
           </Pressable>
 
+          <Pressable
+            testID="admin-manage-banners"
+            onPress={() => router.push("/admin/banners")}
+            style={[s.card, { flexDirection: "row", alignItems: "center", gap: spacing.md }]}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.brandSecondary, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="images-outline" size={22} color={colors.onBrandSecondary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: "500", fontSize: 15 }}>Manage banners</Text>
+              <Text style={{ color: colors.onSurfaceMuted, fontSize: 12, marginTop: 2 }}>Create, edit, reorder, delete</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceMuted} />
+          </Pressable>
+
           <View style={s.card}>
             <Text style={typography.h3}>Low stock</Text>
             <Text style={{ color: stats.low_stock > 0 ? colors.error : colors.onSurfaceMuted, marginTop: 6 }}>
